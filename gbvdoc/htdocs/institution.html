@@ -1,0 +1,12 @@
+[% IF inst %]
+<dt>Bibliothek</dt>
+<dd>
+  <a href="[% inst.href %]">[% 
+    i2 = inst.rev('owl:sameAs'); IF i2; inst = i2; END %][% 
+    IF inst.foaf_name ; inst.foaf_name ; ELSE ; inst ; END %]</a>
+  [% home = inst.foaf_homepage %]
+  [% IF home %]
+    <a href="$home.href"><img src="/img/home.png" border="0"></a>
+  [% END %]
+</dd>
+[% END %]

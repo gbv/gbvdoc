@@ -1,0 +1,67 @@
+﻿[% title = uri.dc_title ? uri.dc_title : "Dokument" %] 
+[% INCLUDE header.html title=title %]
+
+[% type = uri.type('frbr:item') ? "ein Exemplar" : "ein Dokument" %]
+<p>
+  Die URI <b>[% uri %]</b> verweist auf 
+  [% IF uri.foaf_page %]
+    <a href="$uri.foaf_page">[% type %]</a>
+  [% ELSE %]
+    [% type %]
+  [% END %]
+  in einer Bibliothek.
+</p>
+
+<div itemscope itemtype="http://schema.org/CreativeWork">
+<dl>
+[% IF uri.dc_title %]
+  <dt>Titel</dt>
+  <dd><em itemprop="name">[% uri.dc_title %]</em></dd>
+[% END %]
+[% IF uri.dcterms_format %]
+  <dt>Format</dt>
+  <dd><a href="[% uri.dcterms_format %]">[% uri.dcterms_format %]</a></dd>
+[% END %]
+[% IF uri.daia_label %]
+  <dt>Signatur</dt>
+  <dd>[% uri.daia_label %]</dd>
+[% END %]
+[% INCLUDE institution.html inst=uri.daia_heldBy %]
+[% IF uri.dcterms_spatial %]
+  <dt>Standort</dt>
+  <dd itemprop="contentLocation"><a href="[% uri.dcterms_spatial %]">[% uri.dcterms_spatial %]</a>
+[% END %]
+</dl>
+</div>
+
+[% IF uri.daia_availableFor OR uri.daia_unavailableFor %]
+<h3>Verfügbarkeit</h3>
+<ul>
+[% FOR a IN uri.daia_availableFor_ %]
+  <li>
+    verfügbar 
+    [% IF a.type('daia:service/Presentation') %]zur Ansicht in der Bibliothek[% END %]
+    [% IF a.type('daia:service/Loan') %]zum Ausleihen[% END %]
+    [% IF a.type('daia:service/Interloan') %]für die Fernleihe[% END %]
+    [% IF a.type('daia:service/Openaccess') %]
+      [% page = a.foaf_page %]
+      [% IF page %]
+        <a href="$page">im Online-Zugriff</a>
+      [% ELSE %]
+        im Online-Zugriff
+      [% END %]
+    [% END %]
+[% END %]
+[% FOR a IN uri.daia_unavailableFor_ %]
+  <li>
+    nicht verfügbar 
+    [% IF a.type('daia:service/Presentation') %]zur Ansicht in der Bibliothek[% END %]
+    [% IF a.type('daia:service/Loan') %]zum Ausleihen[% END %]
+    [% IF a.type('daia:service/Interloan') %]für die Fernleihe[% END %]
+  </li>
+[% END %]
+</ul>
+[% END %]
+
+
+[% INCLUDE footer.html %]

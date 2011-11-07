@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
+      "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+ <head> 
+  [% base = request.base.remove('/$') %]
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <title>[% title %]</title>
+  <link href="$base/style.css" rel="stylesheet" type="text/css" />
+  <link href="$base/tablesorter.css" rel="stylesheet" type="text/css" />
+  [%- IF css %][% FOR c IN css -%]
+  <link href="$base/$c" rel="stylesheet" type="text/css" />
+  [%- END; END -%]
+  <script type="text/javascript" src="$base/js/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="$base/js/jquery.tablesorter.min.js"></script>
+  [%- IF javascript %][% FOR js IN javascript -%]
+  <script type="text/javascript" src="$base/js/$js"></script>
+  [%- END; END -%]
+  <script type="text/javascript">
+    jQuery(document).ready(function(){ 
+        jQuery(".tablesorter").tablesorter({});
+    }); 
+    </script>
+ </head>
+ <body>
+  <div id="main">
+   <div id="header">
+    <div id="headertitle">
+     <a href="$base">$apptitle</a>
+    </div>
+    <a href="http://www.gbv.de/" title="Verbundzentrale des GBV">
+     <img src="$base/img/gbvlogo.png" width="128" height="64" border="0" style="padding: 19px 0px 0px 16px" alt="GBV"/>
+    </a>
+   </div>
+   <div id="content">
+    <h1>$title</h1>
+    [% IF error %]<div class="error">$error</div>[% END %]

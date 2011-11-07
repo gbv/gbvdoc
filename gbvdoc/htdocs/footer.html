@@ -1,0 +1,21 @@
+﻿  </div>
+  <div class="clearboth"><!-- --></div>
+  <div id='footer'>
+   [%IF uri %]
+    &lt;<a href="${uri.href}">$uri</a>&gt;
+    [% FOREACH f IN formats %]
+      <a href="?format=$f">$f</a>
+    [% END %]
+    <span onClick="document.getElementById('debug').style.display='block';">_</span>
+    <br/>
+    <div id="debug" style="display:none">
+     <div id="ttlpre">
+      [% uri.graph.ttlpre %]
+     </div>
+    </div>
+   [% END %]
+    <div>[% timestamp %][% IF cached %] (cached)[% END %]</div>
+  </div>
+  </div> <!-- wrapper -->
+ </body>
+</html>

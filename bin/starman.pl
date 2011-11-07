@@ -11,7 +11,7 @@ my @argv = (
     '--port'      => 6100,
     '--pid'       => '/tmp/gbvdoc-starman.pid',
     '--error-log' => '/var/log/gbvdoc/starman.log',
-    '/home/daia/code/gbvdoc/app.psgi'
+    '/home/gbvdoc/code/gbvdoc/app.psgi'
 );
     
 my $runner = Plack::Runner->new(server => 'Starman', env => 'production');

@@ -1,44 +1,33 @@
 use strict;
 use warnings;
 
+# get absolute path and local libraries
 use File::Spec::Functions qw(catdir rel2abs);
 use File::Basename qw(dirname);
 use lib rel2abs(catdir(dirname($0),'lib'));
 
+use Log::Contextual qw(:log);
+use RDF::Trine;
+BEGIN { # remove support of RDFa by force!
+    foreach my $type (qw(application/xhtml+xml text/html)) {
+        delete $RDF::Trine::Parser::media_types{ $type };
+    }
+}
+
+our $root = Cwd::realpath( dirname($0) );
+
 use Plack::Builder;
 use GBV::App::URI::Document;
 
-my $env = $ENV{PLACK_ENV} || "deployment";
-my $root = rel2abs(catdir(dirname($0),'htdocs'));
-
-my $app  = GBV::App::URI::Document->new;
+sub is_devel { ($ENV{PLACK_ENV}||'') eq 'development' }
 
 builder {
+    enable_if { is_devel } 'Debug';
+    enable_if { is_devel } 'Debug::TemplateToolkit';
+    enable_if { is_devel } 'ConsoleLogger';
+    enable_if { !is_devel } 'SimpleLogger';
+    enable_if { is_devel } 'Log::Contextual', level => 'trace';
+    enable_if { !is_devel } 'Log::Contextual', level => 'warn';
 
-    # Show server status at http://uri.gbv.de/document/_status
-    enable 'ServerStatus::Lite',
-        path => '/_status',
-        scoreboard => '/tmp/gbvdoc-scoreboard';
-
-    enable_if { $env eq 'debug' } 'AccessLog';
-    enable_if { $env eq 'debug' } 'StackTrace';
-    enable_if { $env eq 'debug' } 'Lint';
-    enable_if { $env eq "debug" } "Debug";
-
-    enable "SimpleLogger";
-    enable_if { $env eq 'debug' } "Log::Contextual", level => 'trace';
-    enable_if { $env ne 'debug' } "Log::Contextual", level => 'warn';
-
-    enable 'Runtime'; # add X-Runtime header
-
-    enable 'Static',
-            path => qr{\.(gif|png|jpg|ico|js|css|xsl)$},
-            root => $root;
-
-    enable 'Plack::Middleware::TemplateToolkit',
-        INCLUDE_PATH => $root,
-        pass_through => 1;
-
-    enable 'JSONP';
-    $app;
-}
+    GBV::App::URI::Document->new( htdocs => "$root/htdocs" );
+};
