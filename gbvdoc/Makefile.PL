@@ -9,6 +9,7 @@ WriteMakefile(
         'Plack::Middleware::ConsoleLogger'   => 0,
         'Plack::Middleware::ServerStatus::Lite' => '0.01',
         'Plack::Middleware::RDF::Flow' => '0.01',
+        'RDF::Trine::Exporter::GraphViz' => '0',
         'Log::Contextual' => 0,
 
         'RDF::Flow::LinkedData' => '0',
