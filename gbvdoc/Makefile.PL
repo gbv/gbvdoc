@@ -15,6 +15,8 @@ WriteMakefile(
         'RDF::Lazy'        => '0',
         'PICA::Record'   => '0.56',
         'LWP::Simple'    => 0,
+        'CHI'       => 0,
+        'Try::Tiny' => 0,
 
         'RDF::Trine'    => 0.136,
 
