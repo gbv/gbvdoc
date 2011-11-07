@@ -20,7 +20,7 @@ use RDF::Trine::Parser;
 use RDF::NS;
 our $NS = RDF::NS->new('20111102');
 
-use GBV::RDF::Sources qw(0.109);
+#use GBV::RDF::Sources qw(0.109);
 use GBV::RDF::Source::Item;
 use CHI;
 
