@@ -16,7 +16,7 @@ our $NS = RDF::NS->new('20111102');
 use File::ShareDir;
 use Plack::Middleware::TemplateToolkit;
 use Plack::Middleware::RDF::Flow qw(0.170);
-use RDF::Trine::Exporter::GraphViz qw(0.003);
+#use RDF::Trine::Exporter::GraphViz qw(0.003);
 use Try::Tiny;
 use CHI;
 
@@ -78,9 +78,9 @@ sub prepare_app {
                 xml  => 'rdfxml',
                 ttl  => 'turtle',
                 json => 'rdfjson',
-                svg  => RDF::Trine::Exporter::GraphViz->new( as => 'svg', namespaces => $NS ),
-                png  => RDF::Trine::Exporter::GraphViz->new( as => 'png', namespaces => $NS ),
-                dot  => RDF::Trine::Exporter::GraphViz->new( as => 'dot', namespaces => $NS ),
+#                svg  => RDF::Trine::Exporter::GraphViz->new( as => 'svg', namespaces => $NS ),
+#                png  => RDF::Trine::Exporter::GraphViz->new( as => 'png', namespaces => $NS ),
+#                dot  => RDF::Trine::Exporter::GraphViz->new( as => 'dot', namespaces => $NS ),
             },
             pass_through => 1;
 
