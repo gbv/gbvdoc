@@ -8,6 +8,7 @@ WriteMakefile(
         'Plack::Middleware::Log::Contextual' => '0.01',
         'Plack::Middleware::ConsoleLogger'   => 0,
         'Plack::Middleware::ServerStatus::Lite' => '0.01',
+        'Log::Contextual' => 0,
 
         'RDF::Flow::LinkedData' => '0',
         'RDF::NS'        => '20111031',
