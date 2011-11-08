@@ -15,6 +15,8 @@ use RDF::Flow::Source qw(empty_rdf);
 
 use parent 'RDF::Flow::Source';
 
+use GBV::RDF::Source::Document;
+
 use LWP::Simple qw(get);
 use PICA::Field;
 use RDF::Flow::LinkedData;
@@ -68,33 +70,15 @@ sub retrieve_rdf {
         }
     }
     
+    if ($pica and $dbkey) {
+        my $docuri = "http://uri.gbv.de/document/$dbkey:ppn:" . $pica->ppn;
+        push @triples, [ iri($uri), $NS->daia_exemplarOf, iri($docuri) ];
+    }
+
     my ($item) = grep {  $_->epn eq $epn } $pica->items if $pica;
     return unless $item;
 
-    # Dokumenttyp
-    my @f002a = split //, $pica->sf('002@$0');
-    my %materialarten = (
-        A => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Druckschrift
-        B => [ { 'dcterms:format' => 'rdamedia:1008' } ], # audiovisuelles Material
-        C => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Blindenschriftträger 
-        D => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Briefe
-        E => [ { 'dcterms:format' => 'rdamedia:1002' } ], # Mikroform
-        G => [ { 'dcterms:format' => 'rdamedia:1001' } ], # Tonträger
-        H => [ { 'dcterms:format' => 'rdamedia:1007' } ], # handschrifliches Material
-        I => [ { 'dcterms:format' => 'rdamedia:1007' } ], # ill. Material
-        K => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Kartographisches Material
-        M => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Noten
-        O => [ { 'dcterms:format' => 'rdamedia:1003' } ], # elektron. Material
-        S => [ { 'dcterms:format' => 'rdamedia:1003' } ], # CD-ROM, Software
-        V => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Objekte
-        Z => [ { 'dcterms:format' => 'rdamedia:1003' } ], # Multimedia
-    );
-
-    my $material = $materialarten{$f002a[0]};# or return;
-    foreach (@$material) {
-        my ($p,$o) = %$_;
-        push @triples, [ iri($uri), $NS->uri($p), $NS->uri($o) ] if $NS->uri($p) and $NS->uri($o);
-    }
+    push @triples, GBV::RDF::Source::Document->pica_data( $uri, $pica, $picabase );
 
     if ($picabase) {
         my $url = $picabase->uri . "CMD?ACT=SRCHA&IKT=1016&TRM=epn+$epn";
@@ -105,7 +89,7 @@ sub retrieve_rdf {
     if ( my $label = $f209A->sf('a') ) {
         push @triples, [ iri($uri), $NS->daia('label'), literal($label) ];
     }
-
+ 
     # Standort
     if ( my $sst = $f209A->sf('f') ) {
         $sst = lc($sst);
@@ -115,12 +99,6 @@ sub retrieve_rdf {
             $ssturi = $liburi->uri . '@' . $sst;
             push @triples, [ iri($uri), $NS->dcterms('spatial'), iri($ssturi) ];
         }
-    }
-
-    # Titel
-    if ( my $title = $pica->sf('021A$a') ) {
-        $title =~ s/ @/ /;
-        push @triples, [ iri($uri), $NS->dc('title'), literal($title) ];
     }
 
     # Ausleihindikator

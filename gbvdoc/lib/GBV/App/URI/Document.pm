@@ -20,8 +20,10 @@ use RDF::Trine::Parser;
 use RDF::NS;
 our $NS = RDF::NS->new('20111102');
 
+use RDF::Flow::Cascade;
 #use GBV::RDF::Sources qw(0.109);
 use GBV::RDF::Source::Item;
+use GBV::RDF::Source::Document;
 use CHI;
 
 use GBV::App::URI::Base qw(0.112);
@@ -32,7 +34,10 @@ sub init {
     my $self = shift;
 
     $self->source(
-        GBV::RDF::Source::Item->new
+        RDF::Flow::Cascade->new(
+            GBV::RDF::Source::Item->new,
+            GBV::RDF::Source::Document->new,
+        )
         ->cached( CHI->new( driver => 'Memory', global => 1, expires_in => '1 hour' ))
     );
 }
@@ -52,12 +57,9 @@ sub core {
         if ( $uri eq $self->base ) {
             # main page
         } else {
-            # show database
-            $env->{'tt.path'} = 'item.html';
+            $env->{'tt.path'} = '/document.html';
         }
     }
-
-    $env->{'tt.path'} = '/document.html';
 
     $env->{'tt.vars'}->{apptitle}  = 'Documents in libraries';
     $env->{'tt.vars'}->{error}     = $env->{'rdflow.error'};
