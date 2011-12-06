@@ -6,12 +6,13 @@ package GBV::RDF::Source::Document;
 use Log::Contextual qw(:log); #, -default_logger
 
 use RDF::NS::Trine;
-our $NS = RDF::NS::Trine->new('20111102');
+our $NS = RDF::NS::Trine->new('20111124');
 
 use RDF::Trine qw(statement iri literal blank);
 use RDF::Trine::Model;
 use RDF::Flow qw(0.173);
 use RDF::Flow::Source qw(empty_rdf);
+use GBV::RDF::Source::Item;
 
 use parent 'RDF::Flow::Source';
 
@@ -49,7 +50,10 @@ sub retrieve_rdf {
         $pica = eval { PICA::Record->new( get($url)) };
     }
 
-    push @triples, $self->pica_data( $uri, $pica, $picabase ) if $pica;
+    if ($pica) {
+        my $org = $db->subjects( $NS->gbv_opac, iri($dburi) )->next;
+        push @triples, $self->pica_data( $uri, $pica, $picabase, $dbkey, $org );
+    }
 
     $rdf->add_statement( statement( @$_ ) ) for @triples;
 
@@ -57,11 +61,17 @@ sub retrieve_rdf {
 }
 
 sub pica_data {
-    my ($self, $uri, $pica, $picabase) = @_;
+    my ($self, $uri, $pica, $picabase, $dbkey, $org) = @_;
     my @triples;
 
     return unless $pica;
 
+    if ($picabase) {
+        my $url = $picabase->uri . "PPNSET?PPN=" . $pica->ppn;
+        push @triples, [ iri($uri), $NS->foaf_page, iri($url) ];
+    }
+    push @triples, [ iri($uri), $NS->daia_collectedBy, $org ] if $org;
+ 
     # Dokumenttyp
     my @f002a = split //, $pica->sf('002@$0');
     my %materialarten = (
@@ -84,13 +94,29 @@ sub pica_data {
     my $material = $materialarten{$f002a[0]};# or return;
     foreach (@$material) {
         my ($p,$o) = %$_;
-        push @triples, [ iri($uri), $NS->uri($p), $NS->uri($o) ] if $NS->uri($p) and $NS->uri($o);
+        push @triples, [ iri($uri), $NS->URI($p), $NS->URI($o) ] 
+            if $NS->URI($p) and $NS->URI($o);
     }
 
     # Titel
     if ( my $title = $pica->sf('021A$a') ) {
         $title =~ s/ @/ /;
         push @triples, [ iri($uri), $NS->dc('title'), literal($title) ];
+    }
+
+    my @items;
+    if ($dbkey and $org) {
+        @items = $pica->items;
+        # TODO: nur die mit passender ILN rausnehmen!
+
+        my $itemsource = GBV::RDF::Source::Item->new;
+
+        foreach my $item (@items) {
+            my $data = { liburi => $org, picabase => $picabase };
+            my $itemuri = "http://uri.gbv.de/document/" . $dbkey . ':epn:' . $item->epn;
+            push @triples, $itemsource->picaitem_to_triples( $itemuri => $item, $data );
+            push @triples, [ iri($uri), $NS->daia_exemplar, iri($itemuri) ];
+        }
     }
 
     return @triples;

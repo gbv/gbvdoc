@@ -5,14 +5,22 @@
 <p>
   Die URI <b>[% uri %]</b> verweist auf 
   [% IF uri.foaf_page %]
-    <a href="$uri.foaf_page">[% type %]</a>
+    <b><a href="$uri.foaf_page">[% type %]</a></b>
   [% ELSE %]
-    [% type %]
+    <b>[% type %]</b>
   [% END %]
   [% IF uri.type('frbr:Item') AND uri.daia_exemplarOf %]
     von <a href="[% uri.daia_exemplarOf %]">einem Dokument</a>
   [% END %]
-  in einer Bibliothek.
+    in
+<!-- TODO: uri.rel('daia:heldBy|daia:collectedby') --> 
+  [% IF uri.rel('daia:heldBy') %]
+    <a href="[% uri.rel('daia:heldBy') %]">einer Bibliothek</a>.
+  [% ELSIF uri.rel('daia:collectedBy') %]
+    <a href="[% uri.rel('daia:collectedBy') %]">einer Bibliothek</a>.
+  [% ELSE %]
+    einer Bibliothek.
+  [% END %]
 </p>
 
 <div itemscope itemtype="http://schema.org/CreativeWork">
@@ -37,7 +45,17 @@
 </dl>
 </div>
 
+[% IF uri.daia_exemplar %]
+<h3>Exemplare</h3>
+<ul>
+  [% FOR item IN uri.daia_exemplar_ %]
+    <li><a href="$item">[% IF item.daia_label %]$item.daia_label[% ELSE %]$item[% END %]</a></li>
+  [% END %]
+</ul>
+[% END %]
+
 [% IF uri.daia_availableFor OR uri.daia_unavailableFor %]
+<!-- TODO: DAIA-URL hinzufügen -->
 <h3>Verfügbarkeit</h3>
 <ul>
 [% FOR a IN uri.daia_availableFor_ %]

@@ -14,7 +14,7 @@ WriteMakefile(
         'Log::Contextual' => 0,
 
         'RDF::Flow::LinkedData' => '0',
-        'RDF::NS'        => '20111102',
+        'RDF::NS'        => '20111124',
         'RDF::Lazy'        => '0',
         'PICA::Record'   => '0.56',
         'LWP::Simple'    => 0,

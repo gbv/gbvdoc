@@ -1,6 +1,6 @@
 ﻿[% title = uri.dc_title ? uri.dc_title : "Exemplar" %] 
 [% INCLUDE header.html title=title %]
-
+<!-- NICHT ZUR PRODUKTION! siehe besser document.html" -->
 <p>
   Die URI <b>[% uri %]</b> verweist auf 
   [% IF uri.foaf_page %]
@@ -8,7 +8,8 @@
   [% ELSE %]
     ein Exemplar 
   [% END %]
-  eines Dokumentes in einer Bibliothek.
+  eines Dokumentes in 
+  einer Bibliothek.
 </p>
 
 <div itemscope itemtype="http://schema.org/CreativeWork">

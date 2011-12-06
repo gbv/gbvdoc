@@ -42,14 +42,14 @@ sub retrieve_rdf {
 
 #    push @triples, [ iri($uri), iri('http://example.org/described-by-record-in-database'), iri($opacuri) ];
 
-    my $liburi = $opac->subjects( $NS->gbv('opac'), iri($opacuri) )->next;
+    my $liburi = $opac->subjects( $NS->gbv_opac, iri($opacuri) )->next;
     if ($liburi) {
-        push @triples, [ iri($uri), $NS->daia('heldBy'), $liburi ];
+        push @triples, [ iri($uri), $NS->daia_heldBy, $liburi ];
 
         my $library = RDF::Flow::LinkedData->new()->retrieve( $liburi->uri );
-        my $iter = $library->get_statements( undef, $NS->foaf('name'), undef );
+        my $iter = $library->get_statements( undef, $NS->foaf_name, undef );
         while(my $st = $iter->next) {  $rdf->add_statement( $st ) } 
-        $iter = $library->get_statements( undef, $NS->owl('sameAs'), undef );
+        $iter = $library->get_statements( undef, $NS->owl_sameAs, undef );
         while(my $st = $iter->next) {  $rdf->add_statement( $st ) } 
 
         # my $iterator = $opac->as_stream;
@@ -57,8 +57,8 @@ sub retrieve_rdf {
     }
 
     my $pica;
-    my $picabase =  $opac->objects( iri($opacuri), $NS->gbv('picabase') )->next;
-    my $dbkey    = $opac->objects( iri($opacuri), $NS->gbv('dbkey') )->next;
+    my $picabase =  $opac->objects( iri($opacuri), $NS->gbv_picabase )->next;
+    my $dbkey    = $opac->objects( iri($opacuri), $NS->gbv_dbkey )->next;
     $dbkey = $dbkey->value if $dbkey;
     if ($picabase) {
         my $url = $picabase->uri . "CMD?ACT=SRCHA&IKT=1016&TRM=epn+$epn&XML=1.0";
@@ -70,24 +70,40 @@ sub retrieve_rdf {
         }
     }
     
-    if ($pica and $dbkey) {
+    return unless $pica;
+
+    if ( $dbkey ) {
         my $docuri = "http://uri.gbv.de/document/$dbkey:ppn:" . $pica->ppn;
         push @triples, [ iri($uri), $NS->daia_exemplarOf, iri($docuri) ];
     }
 
-    my ($item) = grep {  $_->epn eq $epn } $pica->items if $pica;
+    my ($item) = grep {  $_->epn eq $epn } $pica->items;
     return unless $item;
 
     push @triples, GBV::RDF::Source::Document->pica_data( $uri, $pica, $picabase );
 
-    if ($picabase) {
-        my $url = $picabase->uri . "CMD?ACT=SRCHA&IKT=1016&TRM=epn+$epn";
-        push @triples, [ iri($uri), $NS->foaf('page'), iri($url) ];
+    my $data = { liburi => $liburi, picabase => $picabase };
+    push @triples, $self->picaitem_to_triples( $uri => $item, $data );
+
+    $rdf->add_statement( statement( @$_ ) ) for @triples;
+
+    return $rdf;
+}
+
+sub picaitem_to_triples {
+    my ($self, $uri, $item, $data) = @_;
+    my @triples;
+
+    if ($data->{picabase}) {
+        my $url = $data->{picabase}->uri . "CMD?ACT=SRCHA&IKT=1016&TRM=epn+" . $item->epn;
+        push @triples, [ iri($uri), $NS->foaf_page, iri($url) ];
     }
+
+    push @triples, [ iri($uri), $NS->rdf_type, $NS->frbr_Item ];
 
     my $f209A = $item->field('209A/..') || PICA::Field->new('209A');
     if ( my $label = $f209A->sf('a') ) {
-        push @triples, [ iri($uri), $NS->daia('label'), literal($label) ];
+        push @triples, [ iri($uri), $NS->daia_label, literal($label) ];
     }
  
     # Standort
@@ -95,9 +111,9 @@ sub retrieve_rdf {
         $sst = lc($sst);
         $sst =~ s/\s+/_/;
         my $ssturi;
-        if ($liburi) {
-            $ssturi = $liburi->uri . '@' . $sst;
-            push @triples, [ iri($uri), $NS->dcterms('spatial'), iri($ssturi) ];
+        if ($data->{liburi}) {
+            $ssturi = $data->{liburi}->uri . '@' . $sst;
+            push @triples, [ iri($uri), $NS->dcterms_spatial, iri($ssturi) ];
         }
     }
 
@@ -106,15 +122,15 @@ sub retrieve_rdf {
         if ($d =~ /[aoz]/) {
             my $service = blank();
             push @triples,
-                [ iri($uri), $NS->daia('unavailableFor'), $service ],
-                [ $service, $NS->rdf('type'), $NS->daia('service/Presentation') ]
+                [ iri($uri), $NS->daia_unavailableFor, $service ],
+                [ $service, $NS->rdf_type, $NS->daia('service/Presentation') ]
             ;
         }
         if ($d =~ /[ifaogz]/) {
             my $service = blank();
             push @triples,
-                [ iri($uri), $NS->daia('unavailableFor'), $service ],
-                [ $service, $NS->rdf('type'), $NS->daia('service/Loan') ]
+                [ iri($uri), $NS->daia_unavailableFor, $service ],
+                [ $service, $NS->rdf_type, $NS->daia('service/Loan') ]
             ;
         }
         if ($d =~ /[ciaogz]/) {
@@ -125,6 +141,7 @@ sub retrieve_rdf {
             ;
         }
     }
+
 
     # Online-Zugriff
     my @online = $item->field('209R/..');
@@ -141,9 +158,9 @@ sub retrieve_rdf {
         next if defined $license and $license =~ /^(KF|KW|NL|PU|ZZ)$/;
 
         push @triples,
-            [ iri($uri), $NS->daia('availableFor'), $service ],
-            [ $service, $NS->rdf('type'), $NS->daia('service/Openaccess') ],
-            [ $service, $NS->foaf('page'), iri($url) ],
+            [ iri($uri), $NS->daia_availableFor, $service ],
+            [ $service, $NS->rdf_type, $NS->URI('daia:service/Openaccess') ],
+            [ $service, $NS->foaf_page, iri($url) ],
         ;
     }
 
@@ -154,12 +171,7 @@ sub retrieve_rdf {
     #  244Z Lokale Schlagworte
 
 
-    push @triples,
-        [ iri($uri), $NS->rdf('type'), $NS->frbr('Item') ],
-    ;
-    $rdf->add_statement( statement( @$_ ) ) for @triples;
-
-    return $rdf;
+    return @triples
 }
 
 # TODO: add to RDF::Trine
