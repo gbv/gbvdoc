@@ -11,14 +11,35 @@ use parent 'Plack::Component', 'Exporter';
 use Plack::Util::Accessor qw(htdocs source base share rewrite_uri formats);
 
 use RDF::NS;
-our $NS = RDF::NS->new('20111102');
+our $NS;
+BEGIN {
+    $NS = RDF::NS->new('20111102');
+}
 
 use File::ShareDir;
 use Plack::Middleware::TemplateToolkit;
 use Plack::Middleware::RDF::Flow qw(0.170);
-#use RDF::Trine::Exporter::GraphViz qw(0.003);
 use Try::Tiny;
 use CHI;
+
+# if RDF::Trine::Exporter::GraphViz is installed, provide graphical RDF
+our %FORMATS;
+BEGIN {
+    %FORMATS = (
+        nt   => 'ntriples', 
+        rdf  => 'rdfxml', 
+        xml  => 'rdfxml',
+        ttl  => 'turtle',
+        json => 'rdfjson',
+    );
+    eval "use RDF::Trine::Exporter::GraphViz;";
+    unless ($@) {
+        foreach (qw(svg png dot)) {
+            $FORMATS{$_} = RDF::Trine::Exporter::GraphViz->new( 
+                as => $_, namespaces => $NS );
+        }
+    }
+}
 
 sub prepare_app {
     my $self = shift;
@@ -71,18 +92,8 @@ sub prepare_app {
             empty_base   => 1,
             rewrite      => $self->rewrite_uri,
             source       => $self->source,
-            namespaces   => $NS,
-            formats      => {
-                nt   => 'ntriples', 
-                rdf  => 'rdfxml', 
-                xml  => 'rdfxml',
-                ttl  => 'turtle',
-                json => 'rdfjson',
-#                svg  => RDF::Trine::Exporter::GraphViz->new( as => 'svg', namespaces => $NS ),
-#                png  => RDF::Trine::Exporter::GraphViz->new( as => 'png', namespaces => $NS ),
-#                dot  => RDF::Trine::Exporter::GraphViz->new( as => 'dot', namespaces => $NS ),
-            },
-            pass_through => 1;
+            pass_through => 1,
+            formats      => \%FORMATS;
 
         # core driver
         enable sub { 
@@ -93,7 +104,7 @@ sub prepare_app {
                 $self->core($app, $env);
                 $self->post($env);
                 $app->($env);
-            }
+            },
         };
     
         Plack::Middleware::TemplateToolkit->new( 
@@ -120,11 +131,11 @@ sub pre {
     my ($self, $env) = @_;
 
     if ( ($env->{'HTTP_X_FORWARDED_HOST'} || '') eq 'uri.gbv.de' ) {
-	my $base = $self->base;
-	$base =~ s{^http://uri.gbv.de/|/$}{}g;
-	$env->{'SCRIPT_NAME'} = "/$base/" . ($env->{'SCRIPT_NAME'}|'');
-#	$env->{'PATH_INFO'} = "/$base" . $env->{'PATH_INFO'};
-	$env->{'REQUEST_URI'} = "/$base" . $env->{'REQUEST_URI'};
+        my $base = $self->base;
+        $base =~ s{^http://uri.gbv.de/|/$}{}g;
+        $env->{'SCRIPT_NAME'} = "/$base/" . ($env->{'SCRIPT_NAME'}|'');
+    #   $env->{'PATH_INFO'} = "/$base" . $env->{'PATH_INFO'};
+        $env->{'REQUEST_URI'} = "/$base" . $env->{'REQUEST_URI'};
     }
 
     my $uri = $env->{'rdflow.uri'};
