@@ -24,6 +24,11 @@ our $databases = RDF::Flow::LinkedData->new(
     name  => 'GBV databases',
     match => qr{^http://uri\.gbv\.de/database/[a-zA-Z0-9:/-]+$}
 );
+our $b3kat = RDF::Flow::LinkedData->new(
+    name  => 'B3Kat',
+    match => qr{^http://lod\.b3kat\.de/}
+);
+
 
 sub retrieve_rdf {
     my ($self, $env) = @_;
@@ -53,6 +58,8 @@ sub retrieve_rdf {
     if ($pica) {
         my $org = $db->subjects( $NS->gbv_opac, iri($dburi) )->next;
         push @triples, $self->pica_data( $uri, $pica, $picabase, $dbkey, $org );
+    } else {
+#        log_warn { "No pica data: $dbkey:ppn:$ppn" };
     }
 
     $rdf->add_statement( statement( @$_ ) ) for @triples;
@@ -99,7 +106,8 @@ sub pica_data {
     }
 
     # Titel
-    if ( my $title = $pica->sf('021A$a') ) {
+    my $title = $pica->sf('021A$a');
+    if ($title) {
         $title =~ s/ @/ /;
         push @triples, [ iri($uri), $NS->dc('title'), literal($title) ];
     }
@@ -117,6 +125,30 @@ sub pica_data {
             push @triples, $itemsource->picaitem_to_triples( $itemuri => $item, $data );
             push @triples, [ iri($uri), $NS->daia_exemplar, iri($itemuri) ];
         }
+    }
+
+
+    my $eki = $pica->field('007G');
+    $eki = join '', $eki->sf('c','0') if $eki;
+    if ($eki and $eki =~ /^BVB(BV\d+)$/) {
+        my $url = "http://lod.b3kat.de/title/$1";
+        my $b3 = $b3kat->retrieve($url);
+        if (!empty_rdf($b3)) {
+            if( $b3->isa('RDF::Trine::Iterator') ) {
+                my $m = RDF::Trine::Model->new;
+                $m->add_iterator($b3);
+                $b3 = $m;
+            }
+            my $btitle = $b3->objects( iri($url), $NS->dc_title )->next;
+            if ($btitle and $btitle->value eq $title) {
+                push @triples, [ iri($uri), $NS->owl_sameAs, iri($url) ];
+                my $match = $b3->objects( iri($url), $NS->frbr_exemplar );
+                while (my $row = $match->next) {
+                    push @triples, [ iri($uri), $NS->daia_exemplar, $row ];
+                }
+            }
+        }
+        push @triples, [ iri($uri), $NS->daia_eki, iri($url) ];
     }
 
     return @triples;

@@ -84,5 +84,13 @@
 </ul>
 [% END %]
 
+[% IF uri.owl_sameAs %]
+<h3>Andere RDF-Datenquellen zu diesem Dokument</h3>
+<ul>
+[% FOR same IN uri.owl_sameAs_ %]
+  <li><a href="$same">$same</a></li>
+[% END %]
+</ul>
+[% END %]
 
 [% INCLUDE footer.html %]
