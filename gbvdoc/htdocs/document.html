@@ -23,15 +23,20 @@
   [% END %]
 </p>
 
+[% format = uri.dcterms_format %]
+[% IF format.str == "http://rdvocab.info/termList/RDAMediaType/1008" %]
+<div itemscope itemtype="http://schema.org/Movie">
+[% ELSE %]
 <div itemscope itemtype="http://schema.org/CreativeWork">
+[% END %]
 <dl>
 [% IF uri.dc_title %]
   <dt>Titel</dt>
   <dd><em itemprop="name">[% uri.dc_title %]</em></dd>
 [% END %]
-[% IF uri.dcterms_format %]
+[% IF format %]
   <dt>Format</dt>
-  <dd><a href="[% uri.dcterms_format %]">[% uri.dcterms_format %]</a></dd>
+  <dd><a href="[% format %]">[% format %]</a></dd>
 [% END %]
 [% IF uri.daia_label %]
   <dt>Signatur</dt>

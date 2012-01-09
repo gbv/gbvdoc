@@ -4,7 +4,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Plack::Request' => '0.9976',
 
-        'Plack::Middleware::TemplateToolkit' => '0.2',
+        'Plack::Middleware::TemplateToolkit' => '0.25',
         'Plack::Middleware::Log::Contextual' => '0.01',
         'Plack::Middleware::ConsoleLogger'   => 0,
         'Plack::Middleware::ServerStatus::Lite' => '0.01',
@@ -20,6 +20,7 @@ WriteMakefile(
         'LWP::Simple'    => 0,
         'CHI'       => 0,
         'Try::Tiny' => 0,
+        'DAIA' => 0,
 
         'RDF::Trine'    => 0.136,
 
