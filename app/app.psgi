@@ -14,7 +14,7 @@ BEGIN { # remove support of RDFa by force!
     }
 }
 
-our $root = Cwd::realpath( dirname($0) );
+my $root = rel2abs(dirname($0));
 
 use Plack::Builder;
 use GBV::App::URI::Document;
@@ -29,5 +29,5 @@ builder {
     enable_if { is_devel } 'Log::Contextual', level => 'trace';
     enable_if { !is_devel } 'Log::Contextual', level => 'warn';
 
-    GBV::App::URI::Document->new( htdocs => "$root/htdocs" );
+    GBV::App::URI::Document->new( htdocs => catdir($root,'htdocs') );
 };

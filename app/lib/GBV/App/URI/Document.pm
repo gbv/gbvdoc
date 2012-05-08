@@ -33,13 +33,15 @@ use parent 'GBV::App::URI::Base';
 sub init {
     my $self = shift;
 
-    $self->source(
-        RDF::Flow::Cascade->new(
+    my $source = RDF::Flow::Cascade->new(
             GBV::RDF::Source::Item->new,
             GBV::RDF::Source::Document->new,
-        )
-        ->cached( CHI->new( driver => 'Memory', global => 1, expires_in => '1 hour' ))
+        );
+    $source = RDF::Flow::Cached->new(
+        $source, 
+        CHI->new( driver => 'Memory', global => 1, expires_in => '1 hour' ),
     );
+    $self->source( $source );
 }
 
 sub core {
