@@ -3,6 +3,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     PREREQ_PM => {
         'Plack::Request' => '0.9976',
+        'Plack::Handler::Starman' => 0,
 
         'Plack::Middleware::TemplateToolkit' => '0.25',
         'Plack::Middleware::Log::Contextual' => '0.01',
@@ -13,7 +14,7 @@ WriteMakefile(
 #        'RDF::Trine::Exporter::GraphViz' => '0',
         'Log::Contextual' => 0,
 
-        'RDF::Flow::LinkedData' => '0',
+        'RDF::Flow'     => '0.178',
         'RDF::NS'        => '20111124',
         'RDF::Lazy'        => '0',
         'PICA::Record'   => '0.56',
