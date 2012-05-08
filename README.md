@@ -1,7 +1,8 @@
-See https://github.com/gbv/daia.gbv.de for a general documentation.
+This web application follows the Padadoy repository layout guidelines.
 
-In addition you can enable graphical RDF output. To do so you must
-manually install RDF::Trine::Exporter::GraphViz in your server.
+To enable graphical RDF output, you must manually install 
+RDF::Trine::Exporter::GraphViz in your server:
 
 $ sudo aptitude install graphviz
 $ sudo cpanm RDF::Trine::Exporter::GraphViz
+
