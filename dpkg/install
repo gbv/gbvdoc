@@ -1,0 +1,6 @@
+bin/*             srv/{$package_name}/bin
+cpanfile          srv/{$package_name}
+
+lib/*       srv/{$package_name}/lib
+local/*     srv/{$package_name}/local
+public/*    srv/{$package_name}/public

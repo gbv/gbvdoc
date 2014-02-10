@@ -1,0 +1,6 @@
+[% IF dataset %]
+<p>
+  <a href="[% dataset.uri %]" title="[% dataset.dct_title %]">
+      [% dataset.gbv_dbkey || dataset.uri %]</a>:
+</p>
+[% END %]

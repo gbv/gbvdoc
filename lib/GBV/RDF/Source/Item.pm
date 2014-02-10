@@ -170,18 +170,7 @@ sub picaitem_to_triples {
     # Provenienz?!
     #  244Z Lokale Schlagworte
 
-
     return @triples
-}
-
-# TODO: add to RDF::Trine
-sub RDF::Trine::Model::add_iterator {
-    my ($self, $iter) = @_;
-    $self->begin_bulk_ops();
-    while (my $st = $iter->next) {
-        $self->add_statement( $st );
-    }
-    $self->end_bulk_ops();
 }
 
 1;

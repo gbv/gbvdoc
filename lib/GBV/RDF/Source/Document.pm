@@ -15,6 +15,11 @@ use RDF::Flow::Source qw(empty_rdf);
 use GBV::RDF::Source::Item;
 
 use parent 'RDF::Flow::Source';
+use RDF::aREF;
+#use RDF::Lazy;
+
+use XML::LibXML::Simple qw(XMLin);
+use HTTP::Tiny;
 
 use LWP::Simple qw(get);
 use PICA::Field;
@@ -29,6 +34,15 @@ our $b3kat = RDF::Flow::LinkedData->new(
     match => qr{^http://lod\.b3kat\.de/}
 );
 
+sub get_xml {
+    my ($url) = @_;
+
+    # TODO: caching
+    my $response = HTTP::Tiny->new->get($url);
+    return unless $response->{success};
+    my $xml = $response->{content};
+    return XMLin($xml, NsStrip => 1, NoAttr => 1);
+}
 
 sub retrieve_rdf {
     my ($self, $env) = @_;
@@ -41,30 +55,41 @@ sub retrieve_rdf {
     my $db = $databases->retrieve( $dburi );
     return if empty_rdf($db);
     
-    my $rdf = RDF::Trine::Model->new;
+    my $model = RDF::Trine::Model->new;
     my @triples;
 
-    push @triples,
-        [ iri($uri), $NS->rdf('type'), $NS->bibo_Document ],
-    ;
+    my $aref = {
+        _id => $uri,
+        a => 'bibo:Document',
+        foaf_isPrimaryTopicOf => { void_inDataset => $dburi },
+    };
 
-    my $pica;
+    my ($pica, $xml);
+
     my $picabase =  $db->objects( iri($dburi), $NS->gbv('picabase') )->next;
     if ($picabase) {
         my $url = "http://unapi.gbv.de/?id=$dbkey:ppn:$ppn&format=pp";
         $pica = eval { PICA::Record->new( get($url)) };
+#        log_trace { "$url => $pica" };
+        $xml  = get_xml("http://unapi.gbv.de/?id=$dbkey:ppn:$ppn&format=dc");
+        if ($xml) {
+            $aref->{"dc:$_"} = $xml->{$_} for keys %$xml;
+        }
     }
 
     if ($pica) {
         my $org = $db->subjects( $NS->gbv_opac, iri($dburi) )->next;
         push @triples, $self->pica_data( $uri, $pica, $picabase, $dbkey, $org );
     } else {
-#        log_warn { "No pica data: $dbkey:ppn:$ppn" };
+        log_warn { "No pica data: $dbkey:ppn:$ppn" };
+        return $model;
     }
 
-    $rdf->add_statement( statement( @$_ ) ) for @triples;
+    decode_aref( $aref, callback => $model );
+    $model->add_statement( statement( @$_ ) ) for @triples;
+    $model->add_iterator( $db->as_stream ); # just some parts
 
-    return $rdf;
+    return $model;
 }
 
 sub pica_data {
@@ -78,39 +103,6 @@ sub pica_data {
         push @triples, [ iri($uri), $NS->foaf_page, iri($url) ];
     }
     push @triples, [ iri($uri), $NS->daia_collectedBy, $org ] if $org;
- 
-    # Dokumenttyp
-    my @f002a = split //, $pica->sf('002@$0');
-    my %materialarten = (
-        A => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Druckschrift
-        B => [ { 'dcterms:format' => 'rdamedia:1008' } ], # audiovisuelles Material
-        C => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Blindenschriftträger 
-        D => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Briefe
-        E => [ { 'dcterms:format' => 'rdamedia:1002' } ], # Mikroform
-        G => [ { 'dcterms:format' => 'rdamedia:1001' } ], # Tonträger
-        H => [ { 'dcterms:format' => 'rdamedia:1007' } ], # handschrifliches Material
-        I => [ { 'dcterms:format' => 'rdamedia:1007' } ], # ill. Material
-        K => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Kartographisches Material
-        M => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Noten
-        O => [ { 'dcterms:format' => 'rdamedia:1003' } ], # elektron. Material
-        S => [ { 'dcterms:format' => 'rdamedia:1003' } ], # CD-ROM, Software
-        V => [ { 'dcterms:format' => 'rdamedia:1007' } ], # Objekte
-        Z => [ { 'dcterms:format' => 'rdamedia:1003' } ], # Multimedia
-    );
-
-    my $material = $materialarten{$f002a[0]};# or return;
-    foreach (@$material) {
-        my ($p,$o) = %$_;
-        push @triples, [ iri($uri), $NS->URI($p), $NS->URI($o) ] 
-            if $NS->URI($p) and $NS->URI($o);
-    }
-
-    # Titel
-    my $title = $pica->sf('021A$a');
-    if ($title) {
-        $title =~ s/ @/ /;
-        push @triples, [ iri($uri), $NS->dc('title'), literal($title) ];
-    }
 
     my @items;
     if ($dbkey and $org) {
@@ -139,20 +131,19 @@ sub pica_data {
                 $m->add_iterator($b3);
                 $b3 = $m;
             }
-            my $btitle = $b3->objects( iri($url), $NS->dc_title )->next;
-            if ($btitle and $btitle->value eq $title) {
-                push @triples, [ iri($uri), $NS->owl_sameAs, iri($url) ];
-                my $match = $b3->objects( iri($url), $NS->frbr_exemplar );
-                while (my $row = $match->next) {
-                    push @triples, [ iri($uri), $NS->daia_exemplar, $row ];
-                }
-            }
+            #my $btitle = $b3->objects( iri($url), $NS->dc_title )->next;
+            #if ($btitle and $btitle->value eq $title) {
+            #    push @triples, [ iri($uri), $NS->owl_sameAs, iri($url) ];
+            #    my $match = $b3->objects( iri($url), $NS->frbr_exemplar );
+            #    while (my $row = $match->next) {
+            #        push @triples, [ iri($uri), $NS->daia_exemplar, $row ];
+            #    }
+            #}
         }
         push @triples, [ iri($uri), $NS->daia_eki, iri($url) ];
     }
 
     return @triples;
 }
-
 
 1;

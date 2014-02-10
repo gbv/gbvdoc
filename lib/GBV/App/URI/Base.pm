@@ -8,7 +8,7 @@ our $VERSION = '0.115';
 use Plack::Builder;
 
 use parent 'Plack::Component', 'Exporter';
-use Plack::Util::Accessor qw(htdocs source base share rewrite_uri formats);
+use Plack::Util::Accessor qw(root source base share rewrite_uri formats);
 
 use RDF::NS;
 our $NS;
@@ -56,12 +56,12 @@ sub prepare_app {
         $self->base('http://uri.gbv.de/');
     }
 
-    # Enable share dir before all other htdocs
-    # To test this module do a symlink from htdocs to share
+    # Enable share dir before all other root
+    # To test this module do a symlink from root to share
     $self->share( try { File::ShareDir::dist_dir('GBV-App-URI-Base') } || 'share' )
         unless $self->share;
 
-    my $htdocs = $self->htdocs ? [ $self->share, $self->htdocs ] : $self->htdocs;
+    my $root = $self->root ? [ $self->share, $self->root ] : $self->root;
  
     $self->formats([qw(ttl json rdfxml)])
         unless $self->formats;
@@ -74,7 +74,7 @@ sub prepare_app {
             path => qr{\.(css|png|gif|js|ico)$};
 
         enable 'Static', 
-            root => $self->htdocs, 
+            root => $self->root, 
             path => qr{\.(css|png|gif|js|ico)$};
 
         # TODO: serve static files via templates?
@@ -108,7 +108,7 @@ sub prepare_app {
         };
     
         Plack::Middleware::TemplateToolkit->new( 
-            INCLUDE_PATH => $htdocs,
+            INCLUDE_PATH => $root,
             RELATIVE => 1, # ??
             INTERPOLATE => 1, 
             pass_through => 0,

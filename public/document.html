@@ -1,6 +1,8 @@
 ﻿[% title = uri.dc_title ? uri.dc_title : "Dokument" %] 
 [% INCLUDE header.html title=title %]
 
+[% INCLUDE dataset.html dataset = uri.foaf_isPrimaryTopicOf.void_inDataset %]
+
 [% type = uri.type('frbr:Item') ? "ein Exemplar" : "ein Dokument" %]
 <p>
   Die URI <b>[% uri %]</b> verweist auf 
@@ -21,23 +23,23 @@
   [% ELSE %]
     einer Bibliothek.
   [% END %]
+
 </p>
 
-[% format = uri.dcterms_format %]
-[% IF format.str == "http://rdvocab.info/termList/RDAMediaType/1008" %]
-<div itemscope itemtype="http://schema.org/Movie">
-[% ELSE %]
 <div itemscope itemtype="http://schema.org/CreativeWork">
-[% END %]
 <dl>
-[% IF uri.dc_title %]
-  <dt>Titel</dt>
-  <dd><em itemprop="name">[% uri.dc_title %]</em></dd>
+[% FOREACH field IN [
+    'title','creator','subject','description','publisher','contributor','date',
+    'type','format','identifier','source','language','relation','coverage','right'
+] ; values = uri.rels('dc:' _ field) %]
+[% IF values.size %]
+  <dt>[% field %]</dt>
+  [% FOREACH value IN values %]
+    <dd>[% value %]</dd>
+  [% END %]
 [% END %]
-[% IF format %]
-  <dt>Format</dt>
-  <dd><a href="[% format %]">[% format %]</a></dd>
 [% END %]
+
 [% IF uri.daia_label %]
   <dt>Signatur</dt>
   <dd>[% uri.daia_label %]</dd>
