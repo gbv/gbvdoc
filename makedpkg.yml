@@ -8,7 +8,7 @@ about:
 
 package:
     name            : gbvdoc 
-    description     : "GBV Documentsr"
+    description     : "GBV Documents"
     depends         : "perl (>= 5.14)"
     binary_depends  :
     section         : gbv
@@ -23,6 +23,7 @@ before_build:
 source:
     - bin
     - cpanfile
+    - cpanfile.snapshot
     - lib
     - local
     - public
