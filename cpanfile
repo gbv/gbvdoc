@@ -26,3 +26,5 @@ requires 'Data::Dumper' => 0;
 
 requires 'XML::LibXML::Simple' => '0.91';
 requires 'HTTP::Tiny';
+
+requires 'Starman';

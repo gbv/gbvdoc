@@ -1,5 +1,8 @@
 use v5.14.2;
 
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
 use Plack::Builder;
 use GBV::App::URI::Document;
 
