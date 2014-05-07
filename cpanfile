@@ -6,10 +6,9 @@ requires 'Plack::Middleware::ConsoleLogger'   => 0;
 requires 'Plack::Middleware::ServerStatus::Lite' => '0.01';
 requires 'Plack::Middleware::RDF::Flow' => '0.01';
 requires 'Plack::Middleware::Cached' => '0.01';
-#        'RDF::Trine::Exporter::GraphViz' => '0';
 requires 'Log::Contextual' => 0;
 
-requires 'RDF::aREF' => '0.10';
+requires 'RDF::aREF' => '0.11';
 requires 'RDF::Flow'     => '0.178';
 requires 'RDF::NS'        => '20111124';
 requires 'RDF::Lazy'        => '0';
