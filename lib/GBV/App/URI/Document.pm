@@ -3,14 +3,9 @@ use warnings;
 package GBV::App::URI::Document;
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 
-use utf8;
-#use Log::Contextual::WarnLogger;
-use Log::Contextual qw(:log); #, -default_logger
-#    => Log::Contextual::WarnLogger->new({ env_prefix => 'URI_GBV_ITEM' });
-
+use Log::Contextual qw(:log);
 use RDF::Lazy qw(0.061);
 use Plack::Request;
-use CHI;
 
 use RDF::Dumper;
 use RDF::Trine qw(iri);
@@ -21,7 +16,6 @@ use RDF::NS;
 our $NS = RDF::NS->new('20111102');
 
 use RDF::Flow::Cascade;
-#use GBV::RDF::Sources qw(0.109);
 use GBV::RDF::Source::Item;
 use GBV::RDF::Source::Document;
 use CHI;
@@ -29,13 +23,13 @@ use CHI;
 use GBV::App::URI::Base qw(0.112);
 use parent 'GBV::App::URI::Base';
 
-
 sub init {
     my $self = shift;
 
     my $source = RDF::Flow::Cascade->new(
             GBV::RDF::Source::Item->new,
             GBV::RDF::Source::Document->new,
+            name => "item-or-document"
         );
     $source = RDF::Flow::Cached->new(
         $source, 

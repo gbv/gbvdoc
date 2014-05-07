@@ -48,7 +48,7 @@ sub retrieve_rdf {
     my ($self, $env) = @_;
 
     my $uri = $env->{'rdflow.uri'};
-    return unless $uri =~ qr{^http://uri\.gbv\.de/document/([a-zA-Z0-9:/-]+):ppn:([0-9Xx]+)$};
+    return unless $uri =~ qr{^http://uri\.gbv\.de/document/([a-z0-9:/-]+):ppn:([0-9X]+)$}i;
     my ($dbkey, $ppn) = ($1, $2);
 
     my $dburi = "http://uri.gbv.de/database/$dbkey";
@@ -59,8 +59,7 @@ sub retrieve_rdf {
     my @triples;
 
     my $aref = {
-        _id => $uri,
-        a => 'bibo:Document',
+        _id => $uri, a => 'bibo:Document',
         foaf_isPrimaryTopicOf => { void_inDataset => $dburi },
     };
 
@@ -68,10 +67,13 @@ sub retrieve_rdf {
 
     my $picabase =  $db->objects( iri($dburi), $NS->gbv('picabase') )->next;
     if ($picabase) {
-        my $url = "http://unapi.gbv.de/?id=$dbkey:ppn:$ppn&format=pp";
-        $pica = eval { PICA::Record->new( get($url)) };
-#        log_trace { "$url => $pica" };
-        $xml  = get_xml("http://unapi.gbv.de/?id=$dbkey:ppn:$ppn&format=dc");
+        my $url = "http://unapi.gbv.de/?id=$dbkey:ppn:$ppn";
+
+        # get pica record
+        $pica = eval { PICA::Record->new( get("$url&format=pp")) };
+
+        # get dublin core record
+        $xml = get_xml("$url&format=dc");
         if ($xml) {
             $aref->{"dc:$_"} = $xml->{$_} for keys %$xml;
         }
@@ -85,9 +87,17 @@ sub retrieve_rdf {
         return $model;
     }
 
+    use Data::Dumper;
+    print STDERR Dumper($aref);
+
     decode_aref( $aref, callback => $model );
+
+    print STDERR "DONE\n";
     $model->add_statement( statement( @$_ ) ) for @triples;
     $model->add_iterator( $db->as_stream ); # just some parts
+
+    print STDERR "DONE\n";
+    #log_trace { "$url => $pica" };
 
     return $model;
 }

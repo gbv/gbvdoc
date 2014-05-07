@@ -16,6 +16,5 @@ builder {
 
     GBV::App::URI::Document->new(
         root   => 'public',
-#        config => rel2abs(catdir(dirname($0),'libsites-config')),
     );
 };

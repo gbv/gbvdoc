@@ -1,32 +1,59 @@
-﻿[% title = uri.dc_title ? uri.dc_title : "Dokument" %] 
-[% INCLUDE header.html title=title %]
+﻿[% type = uri.type('frbr:Item') ? "ein Exemplar" : "ein Dokument" %]
+[% library = uri.rel('daia:heldBy') ? uri.rel('daia:heldBy') : uri.rel('daia:collectedBy') %]
+[% dataset = uri.foaf_isPrimaryTopicOf.void_inDataset %]
+[% id = uri.str.remove('.*/') %]
 
-[% INCLUDE dataset.html dataset = uri.foaf_isPrimaryTopicOf.void_inDataset %]
+[% INCLUDE header.html title=id %]
 
-[% type = uri.type('frbr:Item') ? "ein Exemplar" : "ein Dokument" %]
 <p>
-  Die URI <b>[% uri %]</b> verweist auf 
+  Die URI 
+  <a href="$uri">$uri</a> 
+  verweist auf 
   [% IF uri.foaf_page %]
-    <b><a href="$uri.foaf_page">[% type %]</a></b>
+    <a href="$uri.foaf_page">$type</a>
   [% ELSE %]
-    <b>[% type %]</b>
+    $type
   [% END %]
   [% IF uri.type('frbr:Item') AND uri.daia_exemplarOf %]
-    von <a href="[% uri.daia_exemplarOf %]">einem Dokument</a>
+    von <a href="$uri.daia_exemplarOf">einem Dokument</a>
   [% END %]
     in
-<!-- TODO: uri.rel('daia:heldBy|daia:collectedby') --> 
-  [% IF uri.rel('daia:heldBy') %]
-    <a href="[% uri.rel('daia:heldBy') %]">einer Bibliothek</a>.
-  [% ELSIF uri.rel('daia:collectedBy') %]
-    <a href="[% uri.rel('daia:collectedBy') %]">einer Bibliothek</a>.
+  [% IF dataset %]
+    <a href="$dataset.uri" title="$dataset.dct_title">der Datenbank</a>
+    von
+  [% END %]
+  [% IF library %]
+    <a href="$library" title="$library.dct_title">einer Bibliothek</a>.
   [% ELSE %]
     einer Bibliothek.
   [% END %]
-
 </p>
 
-<div itemscope itemtype="http://schema.org/CreativeWork">
+<div>
+  <h3>
+    Verfügbarkeit
+    <small><a href="http://daia.gbv.de/?id=[% uri %]">via DAIA</a></small>
+  </h3>
+  <div daia-api="http://daia.gbv.de/" daia-id="[% uri %]"></div>
+</div>
+
+[% IF uri.daia_exemplar %]
+  <h3>Exemplare <small>in RDF</small></h3>
+  <ul>
+    [% FOR item IN uri.daia_exemplar_ %]
+      <li><a href="$item">[% IF item.daia_label %]$item.daia_label[% ELSE %]$item[% END %]</a></li>
+    [% END %]
+  </ul>
+[% END %]
+
+<!-- TODO: csl-suggest -->
+
+<h3>Metadaten <small>in RDF</small></h3>
+<div>
+<p>
+  In verschiedenene Formaten auch 
+  <a href="http://unapi.gbv.de/?id=$id">via unAPI</a> abrufbar.
+</p>  
 <dl>
 [% FOREACH field IN [
     'title','creator','subject','description','publisher','contributor','date',
@@ -51,46 +78,6 @@
 [% END %]
 </dl>
 </div>
-
-[% IF uri.daia_exemplar %]
-<h3>Exemplare</h3>
-<ul>
-  [% FOR item IN uri.daia_exemplar_ %]
-    <li><a href="$item">[% IF item.daia_label %]$item.daia_label[% ELSE %]$item[% END %]</a></li>
-  [% END %]
-</ul>
-[% END %]
-
-[% IF uri.daia_availableFor OR uri.daia_unavailableFor %]
-<!-- TODO: DAIA-URL hinzufügen -->
-<h3>Verfügbarkeit</h3>
-<ul>
-[% FOR a IN uri.daia_availableFor_ %]
-  <li>
-    verfügbar 
-    [% IF a.type('daia:service/Presentation') %]zur Ansicht in der Bibliothek[% END %]
-    [% IF a.type('daia:service/Loan') %]zum Ausleihen[% END %]
-    [% IF a.type('daia:service/Interloan') %]für die Fernleihe[% END %]
-    [% IF a.type('daia:service/Openaccess') %]
-      [% page = a.foaf_page %]
-      [% IF page %]
-        <a href="$page">im Online-Zugriff</a>
-      [% ELSE %]
-        im Online-Zugriff
-      [% END %]
-    [% END %]
-[% END %]
-[% FOR a IN uri.daia_unavailableFor_ %]
-  <li>
-    nicht verfügbar 
-    [% IF a.type('daia:service/Presentation') %]zur Ansicht in der Bibliothek[% END %]
-    [% IF a.type('daia:service/Loan') %]zum Ausleihen[% END %]
-    [% IF a.type('daia:service/Interloan') %]für die Fernleihe[% END %]
-  </li>
-[% END %]
-</ul>
-[% END %]
-
 [% IF uri.owl_sameAs %]
 <h3>Andere RDF-Datenquellen zu diesem Dokument</h3>
 <ul>
