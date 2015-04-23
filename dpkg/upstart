@@ -14,6 +14,6 @@ script
     chdir /srv/$NAME
     echo "Starting $NAME at `date +%Y-%m-%d\ %T\ %Z`:"
     set -x
-    exec perl -Ilocal/lib/perl5 local/bin/carton exec -- local/bin/starman -p {$package_port} bin/app.psgi
+    exec perl -Ilocal/lib/perl5 local/bin/carton exec -- local/bin/starman -p {$package_port} bin/app.psgi--error_log /var/log/$NAME/error.log --access_log /var/log/$NAME/access.log
 end script
 
