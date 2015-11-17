@@ -1,4 +1,13 @@
 *~
-*.bak
-build/
-Makefile.old
+local/
+
+debian/*.log
+debian/*.debhelper
+debian/*.substvars
+debian/files
+debian/*/
+
+*.deb
+
+doc/gbvdoc.*
+!doc/gbvdoc.pdf

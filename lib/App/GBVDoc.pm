@@ -1,13 +1,12 @@
-use strict;
-use warnings;
-package GBV::App::URI::Document;
+package App::GBVDoc;
+use v5.14;
+
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 
 use Log::Contextual qw(:log);
 use RDF::Lazy qw(0.061);
 use Plack::Request;
 
-use RDF::Dumper;
 use RDF::Trine qw(iri);
 use RDF::Trine::Model;
 use RDF::Trine::Parser;

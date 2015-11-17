@@ -1,0 +1,5 @@
+app.psgi        srv/gbvdoc
+lib/*           srv/gbvdoc/lib
+local/*         srv/gbvdoc/local
+public/*        srv/gbvdoc/public
+README.md       usr/share/doc/gbvdoc

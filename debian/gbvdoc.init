@@ -1,0 +1,84 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          gbvdoc
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: gbvdoc web application
+# Description:       Start and stop gbvdoc web application.
+### END INIT INFO
+
+PACKAGE=gbvdoc
+PIDFILE=/srv/$PACKAGE/$PACKAGE.pid
+
+[ -f /etc/default/$PACKAGE ] && . /etc/default/$PACKAGE
+
+start () {
+    echo -n "Starting $0: "
+    if [ -z "$PORT" -o -z "$WORKERS" ]; then
+        echo "missing configuration PORT and/or WORKERS"
+        exit 5
+    fi
+    cd /srv/$PACKAGE
+    perl -Ilib -Ilocal/lib/perl5 `which starman` \
+        --pid $PIDFILE --daemonize \
+        --workers $WORKERS --port $PORT --user $PACKAGE \
+        --error-log /var/log/$PACKAGE/error.log \
+        --access-log /var/log/$PACKAGE/access.log \
+        app.psgi
+    retval=$?
+    if [ $retval -eq 0 ]; then
+        echo "done"
+        exit
+    else
+        echo "failed"
+        exit $?
+    fi
+}
+
+stop () {
+    echo -n "Stopping $0: "
+    if [ -f $PIDFILE ]; then
+        kill `cat $PIDFILE` 2>&1 > /dev/null
+        retval=$?
+        [ $retval -eq 0 ] && rm -f $PIDFILE
+        echo "done"
+    else
+        echo "pid $PIDFILE not found"
+        return 1
+    fi
+}
+
+status () {
+  if [ -f $PIDFILE ]; then
+    PID=`cat $PIDFILE`
+    kill -0 $PID &> /dev/null
+    retval=$?
+    if [ $retval -eq 0 ]; then
+      echo "$0 is running with PID $PID on port $PORT"
+      ss -tlnp "( sport = :$PORT )"
+      exit 0
+    else
+      echo "$0 is not running, but pidfile $PIDFILE exists"
+    fi
+  else
+    echo "$0 is not running"
+  fi
+}
+
+case "$1" in
+    start|stop|status)
+        $1
+    ;;
+    restart)
+        stop
+        start
+    ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}" >&2
+        exit 2
+    ;;
+esac
+

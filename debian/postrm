@@ -1,14 +1,12 @@
 #!/bin/sh
-
 set -e
 
-PACKAGE={$package_name}
+PACKAGE="$DPKG_MAINTSCRIPT_PACKAGE"
 
 case "$1" in
-    purge)
-
+    remove)
         # Remove init script links
-        update-rc.d $PACKAGE remove
+        update-rc.d -f $PACKAGE remove
 
         # Remove user
         userdel $PACKAGE || true
@@ -20,7 +18,13 @@ case "$1" in
         rm -rf /var/log/$PACKAGE
     ;;
 
-    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    purge)
+        # Remove config files
+        rm -rf /etc/$PACKAGE
+        rm -f /etc/default/$PACKAGE
+    ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
      
     *)

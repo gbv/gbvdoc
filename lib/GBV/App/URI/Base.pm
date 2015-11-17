@@ -1,14 +1,12 @@
-use strict;
-use warnings;
 package GBV::App::URI::Base;
-#ABSTRACT: Common base class of Linked Data applications at http://uri.gbv.de/
+use v5.14;
 
 our $VERSION = '0.115';
 
 use Plack::Builder;
 
 use parent 'Plack::Component', 'Exporter';
-use Plack::Util::Accessor qw(root source base share rewrite_uri formats);
+use Plack::Util::Accessor qw(source base rewrite_uri formats);
 
 use RDF::NS;
 our $NS;
@@ -56,13 +54,6 @@ sub prepare_app {
         $self->base('http://uri.gbv.de/');
     }
 
-    # Enable share dir before all other root
-    # To test this module do a symlink from root to share
-    $self->share( try { File::ShareDir::dist_dir('GBV-App-URI-Base') } || 'share' )
-        unless $self->share;
-
-    my $root = $self->root ? [ $self->share, $self->root ] : $self->root;
- 
     $self->formats([qw(ttl json rdfxml)])
         unless $self->formats;
 
@@ -70,11 +61,7 @@ sub prepare_app {
 
     $self->{app} = builder {
         enable 'Static', 
-            root => $self->share, pass_through => 1,
-            path => qr{\.(css|png|gif|js|ico)$};
-
-        enable 'Static', 
-            root => $self->root, 
+            root => 'public',
             path => qr{\.(css|png|gif|js|ico)$};
 
         # TODO: serve static files via templates?
@@ -108,7 +95,7 @@ sub prepare_app {
         };
     
         Plack::Middleware::TemplateToolkit->new( 
-            INCLUDE_PATH => $root,
+            INCLUDE_PATH => 'public',
             RELATIVE => 1, # ??
             INTERPOLATE => 1, 
             pass_through => 0,

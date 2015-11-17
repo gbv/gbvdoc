@@ -1,0 +1,40 @@
+language: bash
+sudo: required
+cache: apt
+
+# we don't use docker but this triggers travis-ci to provide Ubuntu 14.04
+services:
+    - docker
+before_install:
+    - lsb_release -a
+    - sudo apt-get update -qq
+install:
+    - sudo make dependencies
+    - make local
+script:
+    # make test and create Debian package
+    - make package
+    # locally install package
+    - sudo dpkg -i gbvdoc_*.deb
+    - sudo service gbvdoc status
+    # test against localhost
+    - export TEST_URL=6012
+    - prove -Ilib -Ilocal/lib/perl5 -v
+
+after_failure:
+    - tail -200 /var/log/gbvdoc/error.log
+
+# Release Debian package via GitHub releases on tagged commits
+before_deploy:
+    - export RELEASE_FILE=$(ls *.deb)
+    - echo "deploying $RELEASE_FILE to GitHub releases"
+deploy:
+    provider: releases
+    api_key:
+        secure: U3ILV8vek4WAIw22aRUaSUwk3iLXkjEZ/eMuvemG5SBxOzciccXogvHnO/0H/Vtj2b4ZcbiUpwBuIKjzsQSv68P7VyVl5ZRSb4zqt/ugsFhI9/RZm4nFtFguTd2L3dANYFxJZ3cqvLDUrok65n/1wdzi1AyiQeDaZ0jG/12m7Xw=
+    file:
+        - "${RELEASE_FILE}"
+        - doc/gbvdoc.pdf
+    on:
+        tags: true
+

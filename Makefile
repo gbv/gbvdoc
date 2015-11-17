@@ -1,52 +1,68 @@
-APP=bin/app.psgi
+MAINSRC:=lib/App/GBVDoc.pm
+CONTROL:=debian/control
 
-about:
-	@echo "make deps|test|build|start|clean|purge"
-	@if [ "$$PERLBREW_PERL" ]; then\
-		echo "Using perlbrew $$PERLBREW_PERL" ;\
-	else \
-		echo "Using Perl" `perl -e 'print $$]'` "and carton with ./local";\
-	fi
+# parse debian control file and changelog
+C:=(
+J:=)
+PACKAGE:=$(shell perl -ne 'print $$1 if /^Package:\s+(.+)/;' < $(CONTROL))
+ARCH   :=$(shell perl -ne 'print $$1 if /^Architecture:\s+(.+)/' < $(CONTROL))
+DEPENDS:=$(shell perl -ne '\
+	next if /^\#/; $$p=(s/^Depends:\s*/ / or (/^ / and $$p));\
+	s/,|\n|\([^$J]+\)//mg; print if $$p' < $(CONTROL))
+VERSION:=$(shell perl -ne '/^.+\s+[$C](.+)[$J]/ and print $$1 and exit' < debian/changelog)
+RELEASE:=${PACKAGE}_${VERSION}_${ARCH}.deb
 
-deps:
-	@if [ "$$PERLBREW_PERL" ]; then\
-		cpanm --installdeps . ;\
-	else \
-		[ -f local/bin/carton ] || cpanm -L local Carton ;\
-		perl -Ilocal/lib/perl5 local/bin/carton install ;\
-	fi
+# show configuration
+info:
+	@echo "Release: $(RELEASE)"
+	@echo "Depends: $(DEPENDS)"
 
-build: noperlbrew deps
-	@echo "Make sure to have no perlbrew-installed libs in local/!"
-	@./makedpkg
+version:
+	@perl -p -i -e 's/^our\s+\$$VERSION\s*=.*/our \$$VERSION="$(VERSION)";/' $(MAINSRC)
+	@perl -p -i -e 's/^our\s+\$$NAME\s*=.*/our \$$NAME="$(PACKAGE)";/' $(MAINSRC)
 
-test:
-	@if [ "$$PERLBREW_PERL" ]; then\
-		prove -r -Ilib t ;\
-	else\
-		perl -Ilocal/lib/perl5 local/bin/carton exec -- prove -r -Ilib t ;\
-	fi
+# build documentation
+PANDOC = $(shell which pandoc)
+ifeq ($(PANDOC),)
+  PANDOC = $(error pandoc is required but not installed)
+endif
 
-start:
-	@if [ "$$PERLBREW_PERL" ]; then\
-		plackup --no-default-middleware -Ilib $(APP) ;\
-	else \
-		perl -Ilocal/lib/perl5 local/bin/carton exec -- local/bin/starman $(APP) ;\
-	fi
+docs: README.md manpage
+	cd doc; make dbinfo.pdf
 
-noperlbrew:
-	@if [ "$$PERLBREW_PERL" ]; then\
-	 	echo "please switch off perlbrew for build!" ;\
-		exit 1 ;\
-	fi
+manpage: debian/$(PACKAGE).1
+debian/$(PACKAGE).1: README.md $(CONTROL)
+	@echo "%$(PACKAGE)(1)" Manual | tr a-z A-Z > tmp.md
+	@echo "# NAME" >> tmp.md
+	@echo "$(PACKAGE) - GBV Documents" >> tmp.md
+	@echo >> tmp.md
+	@grep -v '^\[!' $< >> tmp.md
+	@cat tmp.md | $(PANDOC) -s -t man -o $@
+	@rm tmp.md
 
-doc:
-	cd doc; make html pdf
+# build Debian package
+package: manpage version tests
+	dpkg-buildpackage -b -us -uc -rfakeroot
+	mv ../$(PACKAGE)_$(VERSION)_*.deb .
 
-clean:
-	@rm -rf debuild
+# install required toolchain and Debian packages
+dependencies:
+	apt-get -y install fakeroot dpkg-dev debhelper
+	apt-get -y install pandoc libghc-citeproc-hs-data 
+	apt-get -y install $(DEPENDS)
 
-purge: clean
-	@rm -rf local
+# install required Perl packages
+local: cpanfile
+	cpanm -l local --skip-satisfied --installdeps --notest .
 
-.PHONY: about deps build test start noperlbrew doc
+# run locally
+run: local
+	plackup -Ilib -Ilocal/lib/perl5 -r app.psgi
+
+# check sources for syntax errors
+code:
+	@find lib -iname '*.pm' -exec perl -c -Ilib -Ilocal/lib/perl5 {} \;
+
+# run tests
+tests: local
+	PLACK_ENV=tests prove -Ilocal/lib/perl5 -l -v

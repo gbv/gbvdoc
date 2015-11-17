@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+
+PACKAGE="$DPKG_MAINTSCRIPT_PACKAGE"
+
+case "$1" in
+    install)
+    ;;
+
+    upgrade)
+        service $PACKAGE stop || true
+    ;;
+
+    abort-upgrade)
+        service $PACKAGE start || true
+    ;;
+
+    *)
+        echo "postinst called with unknown argument $1" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

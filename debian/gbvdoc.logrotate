@@ -1,7 +1,7 @@
 /var/log/gbvdoc/*.log {
-  weekly
+  daily
   missingok
-  rotate 10
+  rotate 30
   compress
   delaycompress
   create 640 gbvdoc gbvdoc
