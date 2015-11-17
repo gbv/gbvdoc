@@ -15,10 +15,6 @@ requires 'LWP::Simple'   , 0;
 # TODO: remove
 requires 'Data::Dumper', 0;
 
-# ??
-requires 'XML::LibXML::Simple', '0.91';
-requires 'HTTP::Tiny';
-
 # requirments met by Debian packages
 requires 'RDF::Trine';
 requires 'RDF::NS', '20130930';

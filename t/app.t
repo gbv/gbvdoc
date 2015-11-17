@@ -12,14 +12,18 @@ test_psgi $app, sub {
     my $res = $cb->(GET "/");
     is $res->code, '200', 'base';
 
-#    $res = $cb->(GET "/gvk");
-#    is $res->code, '200', 'gvk found';
+    my $doc = 'opac-de-960:ppn:02722807X';
+    $res = $cb->(GET "/$doc");
+    is $res->code, '200', "$doc found";
 
-#    foreach my $format (qw(ttl rdfxml dbinfo ld json)) {
-#        $res = $cb->(GET "/opac-de-ilm1?format=$format");
-#        is $res->code, '200', "opac-de-ilm1 found (format=$format)";
-#    }
+    foreach my $format (qw(ttl rdfxml json)) {
+        $res = $cb->(GET "/$doc?format=$format");
+        is $res->code, '200', "format=$format";
+    }
 
+    $doc = 'opac-de-960:epn:711201994';
+    $res = $cb->(GET "/$doc");
+    is $res->code, '200', "$doc found";
 };
 
 done_testing;

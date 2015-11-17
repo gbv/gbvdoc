@@ -1,0 +1,65 @@
+.TH "GBVDOC" "1" "" "MANUAL" ""
+.SH NAME
+.PP
+gbvdoc \- GBV Documents
+.SH SYNOPSIS
+.PP
+The application is automatically started as service, listening on port
+6012.
+.IP
+.nf
+\f[C]
+sudo\ service\ gbvdoc\ {status|start|stop|restart}
+\f[]
+.fi
+.SH INSTALLATION
+.PP
+The software is released as Debian package for Ubuntu 14.04 LTS.
+Other Debian based distributions \f[I]might\f[] work too.
+Releases can be found at <https://github.com/gbv/gbvdoc/releases>
+.PP
+To install required dependencies either use a package manager such as
+\f[C]gdebi\f[], manually install dependencies (inspectable via
+\f[C]dpkg\ \-I\ gbvdoc_*.deb\f[]):
+.IP
+.nf
+\f[C]
+sudo\ dpkg\ \-i\ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ #\ install\ dependencies
+sudo\ dpkg\ \-i\ gbvdoc_X.Y.Z_amd64.deb\ \ \ \ #\ change\ X.Y.Z
+\f[]
+.fi
+.PP
+After installation the service is available at localhost on port 6012.
+Better put the service behind a reverse proxy to enable SSL and nice
+URLs! In the following a reverse proxy mapping
+<http://uri.gbv.de/document/> to <http://localhost:6012/> is assumed.
+.SH ADMINISTRATION
+.SS Configuration
+.PP
+Config file \f[C]/etc/default/gbvdoc\f[] only contains basic server
+configuration in form of simple key\-values pairs:
+.IP \[bu] 2
+\f[C]PORT\f[] \- port number (required, 6012 by default)
+.IP \[bu] 2
+\f[C]WORKERS\f[] \- number of parallel connections (required, 5 by
+default).
+.SS Logging
+.PP
+Log files are located at \f[C]/var/log/gbvdoc/\f[]:
+.IP \[bu] 2
+\f[C]error.log\f[]
+.IP \[bu] 2
+\f[C]access.log\f[]
+.SH CHANGES
+.PP
+See \f[C]debian/changelog\f[].
+.SH SEE ALSO
+.PP
+The source code of gbvdoc is managed in a public git repository at
+<https://github.com/gbv/gbvdoc>.
+Please report bugs and feature request at
+<https://github.com/gbv/gbvdoc/issues>!
+.PP
+The Changelog is located in file \f[C]debian/changelog\f[].
+.PP
+Development guidelines are given in file \f[C]CONTRIBUTING.md\f[].

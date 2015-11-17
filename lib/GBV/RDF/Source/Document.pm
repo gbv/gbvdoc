@@ -1,6 +1,6 @@
-use strict;
-use warnings;
 package GBV::RDF::Source::Document;
+use v5.14;
+
 #ABSTRACT: Edition or work from http://uri.gbv.de/document/
 
 use Log::Contextual qw(:log); #, -default_logger
@@ -16,10 +16,6 @@ use GBV::RDF::Source::Item;
 
 use parent 'RDF::Flow::Source';
 use RDF::aREF;
-#use RDF::Lazy;
-
-use XML::LibXML::Simple qw(XMLin);
-use HTTP::Tiny;
 
 use LWP::Simple qw(get);
 use PICA::Field;
@@ -33,16 +29,6 @@ our $b3kat = RDF::Flow::LinkedData->new(
     name  => 'B3Kat',
     match => qr{^http://lod\.b3kat\.de/}
 );
-
-sub get_xml {
-    my ($url) = @_;
-
-    # TODO: caching
-    my $response = HTTP::Tiny->new->get($url);
-    return unless $response->{success};
-    my $xml = $response->{content};
-    return XMLin($xml, NsStrip => 1, NoAttr => 1);
-}
 
 sub retrieve_rdf {
     my ($self, $env) = @_;
@@ -63,7 +49,7 @@ sub retrieve_rdf {
         foaf_isPrimaryTopicOf => { void_inDataset => $dburi },
     };
 
-    my ($pica, $xml);
+    my ($pica);
 
     my $picabase =  $db->objects( iri($dburi), $NS->gbv('picabase') )->next;
     if ($picabase) {
@@ -71,12 +57,6 @@ sub retrieve_rdf {
 
         # get pica record
         $pica = eval { PICA::Record->new( get("$url&format=pp")) };
-
-        # get dublin core record
-        $xml = get_xml("$url&format=dc");
-        if ($xml) {
-            $aref->{"dc:$_"} = $xml->{$_} for keys %$xml;
-        }
     }
 
     if ($pica) {
@@ -87,16 +67,16 @@ sub retrieve_rdf {
         return $model;
     }
 
-    use Data::Dumper;
-    print STDERR Dumper($aref);
+    #use Data::Dumper;
+    #print STDERR Dumper($aref);
 
     decode_aref( $aref, callback => $model );
 
-    print STDERR "DONE\n";
+    #print STDERR "DONE\n";
     $model->add_statement( statement( @$_ ) ) for @triples;
     $model->add_iterator( $db->as_stream ); # just some parts
 
-    print STDERR "DONE\n";
+    #print STDERR "DONE\n";
     #log_trace { "$url => $pica" };
 
     return $model;

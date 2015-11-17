@@ -9,7 +9,6 @@ Package: gbvdoc
 Architecture: any
 Depends: perl-base (>= 5.14.1),
     starman,
-    libxml-libxml-perl, 
     librdf-trine-perl,
     librdf-ns-perl,
     libjson-perl,

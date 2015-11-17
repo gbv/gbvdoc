@@ -1,6 +1,6 @@
-use strict;
-use warnings;
 package GBV::RDF::Source::Item;
+use v5.14;
+
 #ABSTRACT: Copy or exemplar in a library holding
 
 use Log::Contextual qw(:log); #, -default_logger
@@ -116,59 +116,6 @@ sub picaitem_to_triples {
             push @triples, [ iri($uri), $NS->dcterms_spatial, iri($ssturi) ];
         }
     }
-
-    # Ausleihindikator
-    if ( my $d = $f209A->sf('d') ) {
-        if ($d =~ /[aoz]/) {
-            my $service = blank();
-            push @triples,
-                [ iri($uri), $NS->daia_unavailableFor, $service ],
-                [ $service, $NS->rdf_type, $NS->daia('service/Presentation') ]
-            ;
-        }
-        if ($d =~ /[ifaogz]/) {
-            my $service = blank();
-            push @triples,
-                [ iri($uri), $NS->daia_unavailableFor, $service ],
-                [ $service, $NS->rdf_type, $NS->daia('service/Loan') ]
-            ;
-        }
-        if ($d =~ /[ciaogz]/) {
-            my $service = blank();
-            push @triples,
-                [ iri($uri), $NS->daia('unavailableFor'), $service ],
-                [ $service, $NS->rdf('type'), $NS->daia('service/Interloan') ]
-            ;
-        }
-    }
-
-
-    # Online-Zugriff
-    my @online = $item->field('209R/..');
-    foreach my $f (@online) {
-        my $service = blank();
-        my $url = $f->sf('a') or next;
-
-        # Weitergabe erlaubt?
-        my $license = $f->sf('S');
-        next if defined $license and not $license;
-
-        # Registrierung o.Ä. Einschränkung
-        $license = $f->sf('4');
-        next if defined $license and $license =~ /^(KF|KW|NL|PU|ZZ)$/;
-
-        push @triples,
-            [ iri($uri), $NS->daia_availableFor, $service ],
-            [ $service, $NS->rdf_type, $NS->URI('daia:service/Openaccess') ],
-            [ $service, $NS->foaf_page, iri($url) ],
-        ;
-    }
-
-    # TODO: Lizenzbedingungen: 209W
-    # Beispiel: opac-de-7:epn:123872275X (CC-BY-NC-ND)
-
-    # Provenienz?!
-    #  244Z Lokale Schlagworte
 
     return @triples
 }

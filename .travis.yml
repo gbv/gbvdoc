@@ -31,10 +31,9 @@ before_deploy:
 deploy:
     provider: releases
     api_key:
-        secure: U3ILV8vek4WAIw22aRUaSUwk3iLXkjEZ/eMuvemG5SBxOzciccXogvHnO/0H/Vtj2b4ZcbiUpwBuIKjzsQSv68P7VyVl5ZRSb4zqt/ugsFhI9/RZm4nFtFguTd2L3dANYFxJZ3cqvLDUrok65n/1wdzi1AyiQeDaZ0jG/12m7Xw=
+        secure: i5hghT2SgdVUwJz3LMlARvA9/2RvZ3qoRt1UFxkQziRsK1Hz4r2plVcxER4tqUk4ODwxFpDGTB8EE4VZcUfrpa4zaS8tYXNdEvPBviBlNaYP9aX+PETsCNeBkxBNjNrv6Is7WRO4T+lIartK58PTQm/3Mise1+pbRU2F5/ERMNXDFgdX8f2XpDKlS0+NeKNvuukYTWrhhkUvypGsa9ZtxieEUdzX27cB26NJ4o5gsKPao7wU/nX3ZYkT+tUgpD+wZy2O0gLzIuxhVyaBBBG50iIWfi5o84nth0dQr8iEBRFkyiUgVyAu0S8evdQseTHvbRicGfnSp6FbHffawginPI7nLXRCh+kgI0RsCoCAgfyBlH4TmGgpIekytcwuw2bEaJCCvUnQQU9iaxw0x3hypkXBjETL1itOInyCORB9QjafP8Wr7taK9GtbUAvTJU0Gn+vIxGrzlw4uUO8dm/Ok8xfESlbbudABaoU21rUf7b5hDhzFcF/aH4MvShf6V4zMtaKB2UwN9xCqBKiEyrmEh6icei9wuTDfsKuULDoQgQGZ5SmQHy+6KQrp+46dfviAaWLWqr4ynYTekvBU09rtMoagrM2WCobf9SzmnbdrbrLOeMhvoJSn9Saj+19cjcXGsEj46QtJ99I8E5qdw++NZFPjguYPKVDAImlyTQJ34s0=
     file:
         - "${RELEASE_FILE}"
         - doc/gbvdoc.pdf
     on:
         tags: true
-
