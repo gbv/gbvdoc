@@ -1,0 +1,33 @@
+body{ margin:0px 0px;}
+.navbar-static-top {
+  background-color: #577FBB;
+  border-color: #577FBB;
+  margin-bottom: 19px;
+  color: #fff;
+}
+.navbar-inverse .navbar-brand {
+  color: #fff;
+  padding-bottom: 0px;
+  line-height: 64px;
+  font-size: 30px;
+}
+.error {
+  padding: 5px 0px;
+  color: red;
+}
+dt.inline { 
+  float: left; 
+  padding-right: 0.4em;
+}
+dt.inline:after {
+  content: ":";
+}
+dd { padding-bottom: 0.4em; }
+
+footer {
+  border-top: 12px solid #6791C9;
+  margin: 1em 0em 1em 0em;
+  font-size: 0.9em;
+  padding: 0.5em 1em;
+  color: #AAA;
+}

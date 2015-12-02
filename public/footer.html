@@ -1,21 +1,26 @@
 ﻿  </div>
-  <div class="clearboth"><!-- --></div>
-  <div id='footer'>
+  <footer class="container-fluid">
    [%IF uri %]
-    &lt;<a href="${uri.href}">$uri</a>&gt;
-    [% FOREACH f IN formats %]
-      <a href="?format=$f">$f</a>
-    [% END %]
-    <span onClick="document.getElementById('debug').style.display='block';">_</span>
-    <br/>
-    <div id="debug" style="display:none">
-     <div id="ttlpre">
-      [% uri.graph.ttlpre %]
+     <div class="row">
+      <div class="col-md-12">
+        &lt;<a href="${uri.href}">$uri</a>&gt;
+        [% FOREACH f IN formats %]
+          <a href="?format=$f">$f</a>
+        [% END %]
+        <span onClick="document.getElementById('debug').style.display='block';">_</span>
+        <br/>
+        <div id="debug" style="display:none">
+          [% uri.graph.ttlpre %]
+        </div>
      </div>
     </div>
    [% END %]
-    <div>[% timestamp %][% IF cached %] (cached)[% END %]</div>
-  </div>
-  </div> <!-- wrapper -->
+    <div class="row">
+      <div class="col-md-6">[% timestamp %][% IF cached %] (cached)[% END %]</div>
+      <div class="col-md-6 text-right">
+        <a href="https://github.com/gbv/gbvdoc">gbvdoc $version</a>
+      </div>
+    </div>
+  </footer>
  </body>
 </html>

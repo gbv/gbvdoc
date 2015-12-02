@@ -1,0 +1,47 @@
+﻿[% INCLUDE header.html title="GBV Datenbank-Ontologie" %]
+<p>
+ <table class="table table-striped">
+  <thead>
+    <th>Property</th>
+    <th>Beschreibung</th>
+  </thead>
+  <tr>
+    <td>frbr:part / frbr:partOf</td>
+    <td>Verbindet Exemplare durch Holonymie ("Teil-von-Beziehung")</td>
+  </tr>
+  <tr>
+    <td>daia:exemplar / daia:exemplarOf</td>
+    <td>Verbindet ein Exemplar mit einem daia:Document (und darüber mit einem bibo:Document und foaf:Document)</td>
+  </tr>
+  <tr>
+    <td>daia:unavailableFor / daia:unavailableOf</td>
+    <td>Verbindet ein Exemplar mit einem daia:Service, für den es nicht verfügbar ist</td>
+  </tr>
+  <tr>
+    <td>daia:availableFor / daia:availableOf</td>
+    <td>Verbindet ein Exemplar mit einem daia:Service, für den es verfügbar ist</td>
+  </tr>
+  <tr>
+    <td>daia:heldBy / daia:heldBy</td>
+    <td>Verbindet ein Exemplar mit einer daia:Institution, die dieses besitzt</td>
+  </tr>
+  <tr>
+    <td>dct:description</td>
+    <td>Beschreibung eines Exemplars</td>
+  </tr>
+  <tr>
+    <td>dct:spatial (same as dbo:location and schema:location)</td>
+    <td>Verbindet ein Exemplar mit einer dct:Location (equivalent zu dbo:Place und schema:Place) eines foaf:Document</td>
+  </tr>
+  <tr>
+    <td>daia:label</td>
+    <td>Eine Identifikationsnummer oder Signatur eines Exemplars</td>
+  </tr>
+  <tr>
+    <td>foaf:page</td>
+    <td>Verbindet ein Exemplar mit einer Internetseite oder einem Dokument über das Exemplar</td>
+  </tr>
+ </table>
+</p>
+[% INCLUDE footer.html %]
+
