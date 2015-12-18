@@ -28,7 +28,7 @@ ifeq ($(PANDOC),)
 endif
 
 docs: README.md manpage
-	cd doc; make dbinfo.pdf
+	cd doc; make $(PACKAGE).pdf
 
 manpage: debian/$(PACKAGE).1
 debian/$(PACKAGE).1: README.md $(CONTROL)

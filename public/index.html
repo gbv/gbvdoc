@@ -1,25 +1,74 @@
-﻿[% INCLUDE header.html title="Dokumente in Bibliotheken" %]
+﻿[% INCLUDE header.html title="Dokumente" %]
 
 <p>
- Über <b>http://uri.gbv.de/document/</b> können Linked Data URIs von Dokumenten in Bibliothekskatalogen - insbesondere von Institutionen im GBV - abgefragt werden. Diese umschließen sowohl im
- <a href="http://de.wikipedia.org/wiki/Functional_Requirements_for_Bibliographic_Records">Functional 
- Requirements for Bibliographic Records</a> (FRBR) beschriebene physische und digitale Medien, die
- <a href="http://purl.org/ontology/daia/">Document Availability Information API</a> 
-(<a href="http://purl.org/NET/DAIA">DAIA</a>), als auch generelle Typen der 
- <a href="http://bibliontology.com/specification">Bibliographic Ontology</a> (BIBO).
-  <p>
-    <a href="properties.html">Übersicht über verwendete Eigenschaften und Relationen</a>
-  </p>
-</p>
-  <h2>Beispiele</h2>
-  Die folgenden Beispiele werden über DAIA abgerufen und mit Hilfe des AngularJS-Moduls <a href="https://github.com/gbv/ng-daia">ng-daia</a> dargestellt.
-<p>
-  <p>Ausgeliehenes Exemplar der SUB Göttingen:</p>
-  <div daia-api="http://daia.gbv.de/" daia-id="opac-de-7:ppn:328140449"></div>
-</p>
-<p>
-  <p>Objekt mit mehreren Exemplaren der SUB Hamburg:</p>
-  <div daia-api="http://daia.gbv.de/" daia-id="opac-de-18:ppn:633827789"></div>
+    Unter <b>[% uri %]</b> können Metadaten aus 
+    <a href="https://uri.gbv.de/database/">Katalogen und anderen Datenbanken</a>
+    abgerufen werden, die aus GBV-Bibliotheken stammen oder für diese
+    relevant sind. Die einzelnen Datensätze beziehen sich jeweils auf: 
+    <ul>
+        <li>
+            ein <b>Dokument</b> in einer Datenbank,<br>
+            identifiziert über eine URI der Form 
+            <code>[% uri %]{dbkey}:ppn:{ppn}</code>,
+        </li>
+        <li>
+            oder ein <b>Exemplar</b> eines Dokumentes in einer Datenbank,<br>
+            identifiziert über eine URI der Form
+            URI der Form <code>[% uri %]{dbkey}:epn:{epn}</code>.
+        </li>
+    </ul>
+    Dabei sind <code>{dbkey}</code> das Datenbankkürzel und <code>{ppn}</code>
+    bzw. <code>{epn}</code> die EPN bzw. PPN des Dokument bzw. Exemplar. 
 </p>
 
+<h2>Beispiele</h2>
+<ul>
+  <li>
+      Dokument mit mehreren Exemplaren der SUB Hamburg:<br>
+      <a href="./opac-de-7:ppn:328140449">[% uri %]opac-de-18:ppn:633827789</a>
+ </li>
+  <li>
+      Exemplar eines Dokumentes an der SUB Göttingen:<br>
+      <a href="./opac-de-7:epn:506688844">[% uri %]opac-de-7:epn:506688844</a>
+ </li>
+</ul>
+
+<h2>Metadaten</h2>
+<p>
+    Grundlegende Metadaten der Dokumente und Exemplare lassen sich in 
+    verschiedenen RDF-basierten Formaten als Linked Open Data abrufen.
+    Neben der Auswahl per HTTP Content-Negotiation kann das Ausgabeformat 
+    mit dem Parameter <code>format</code> gewählt werden:
+
+    <ul>
+      [% FOREACH f IN formats %]
+        <li><code>...?format=$f</code></li>
+      [% END %]
+    </ul>
+
+    Die verwendeten RDF-Ontologien
+    <a href="ontology.html">sind hier beschrieben</a>.
+</p>    
+<p>
+    Darüber hinaus sind Zugriffe auf weitere APIs und Datenquellen verlinkt:
+    <dl>
+    <dt>unAPI</dt>
+    <dd>
+        Zum Abruf der erweiterten Metadaten in vielen verschiedenen
+        Formaten.
+    </dd>
+    <dt>DAIA</dt>
+    <dd>
+        Zum Abruf der aktuellen Verfügbarkeit. Die Verfügbarkeit wird
+        direkt abgerufen und mit Hilfe des AngularJS-Moduls 
+        <a href="https://github.com/gbv/ng-daia">ng-daia</a> angezeigt.
+    </dd>
+    <dt>LOD</dt>
+    <dd>
+        Links auf weitere URIs, unter denene RDF-Daten über die
+        gleichen Dokumente abrufbar sind.
+    </dt>
+    </dl>
+</p>
+   
 [% INCLUDE footer.html %]

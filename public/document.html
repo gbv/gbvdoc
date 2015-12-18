@@ -37,34 +37,26 @@
   <div daia-api="http://daia.gbv.de/" daia-id="[% uri %]"></div>
 </div>
 
-[% IF uri.daia_exemplar %]
-  <h3>Exemplare <small>in RDF</small></h3>
-  <ul>
-    [% FOR item IN uri.daia_exemplar_ %]
-      <li><a href="$item">[% IF item.daia_label %]$item.daia_label[% ELSE %]$item[% END %]</a></li>
-    [% END %]
-  </ul>
-[% END %]
-
 <!-- TODO: csl-suggest -->
 
 <h3>Metadaten <small>in RDF</small></h3>
+
 <div>
 <p>
   In verschiedenene Formaten auch 
   <a href="http://unapi.gbv.de/?id=$id">via unAPI</a> abrufbar.
 </p>  
 <dl>
-[% FOREACH field IN [
-    'title','creator','subject','description','publisher','contributor','date',
-    'type','format','identifier','source','language','relation','coverage','right'
-] ; values = uri.rels('dc:' _ field) %]
-[% IF values.size %]
-  <dt>[% field %]</dt>
-  [% FOREACH value IN values %]
-    <dd>[% value %]</dd>
-  [% END %]
-[% END %]
+
+[% IF uri.daia_exemplar %]
+  <dt>Exemplare</dt>
+  <ul>
+    [% FOR item IN uri.daia_exemplar_ %]
+      <li>
+          <a href="$item">[% IF item.daia_label %]$item.daia_label[% ELSE %]$item[% END %]</a>
+      </li>
+    [% END %]
+  </ul>
 [% END %]
 
 [% IF uri.daia_label %]
@@ -78,6 +70,7 @@
 [% END %]
 </dl>
 </div>
+
 [% IF uri.owl_sameAs %]
 <h3>Andere RDF-Datenquellen zu diesem Dokument</h3>
 <ul>
@@ -85,6 +78,13 @@
   <li><a href="$same">$same</a></li>
 [% END %]
 </ul>
+[% END %]
+
+[% IF uri.graph %]
+<h3>RDF/Turtle</h3>
+<div>
+  [% uri.graph.ttlpre %]
+</div>
 [% END %]
 
 [% INCLUDE footer.html %]

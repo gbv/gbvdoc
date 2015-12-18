@@ -4,14 +4,11 @@
      <div class="row">
       <div class="col-md-12">
         &lt;<a href="${uri.href}">$uri</a>&gt;
-        [% FOREACH f IN formats %]
-          <a href="?format=$f">$f</a>
+        [% IF uri.graph %]
+            [% FOREACH f IN formats %]
+              <a href="?format=$f">$f</a>
+            [% END %]
         [% END %]
-        <span onClick="document.getElementById('debug').style.display='block';">_</span>
-        <br/>
-        <div id="debug" style="display:none">
-          [% uri.graph.ttlpre %]
-        </div>
      </div>
     </div>
    [% END %]

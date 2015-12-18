@@ -56,6 +56,8 @@ sub retrieve_rdf {
         # while(my $row = $iterator->next) {  $rdf->add_statement( $row ) } 
     }
 
+    # TODO: get via DAIA and show RDF
+    
     my $pica;
     my $picabase =  $opac->objects( iri($opacuri), $NS->gbv_picabase )->next;
     my $dbkey    = $opac->objects( iri($opacuri), $NS->gbv_dbkey )->next;

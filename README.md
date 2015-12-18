@@ -21,6 +21,11 @@ put the service behind a reverse proxy to enable SSL and nice URLs! In the
 following a reverse proxy mapping <http://uri.gbv.de/document/> to
 <http://localhost:6012/> is assumed.
 
+# USAGE
+
+GBV Documents provides an interface with links to APIs for access of
+metadata from databases used and/or provided by VZG.
+
 # ADMINISTRATION
 
 ## Configuration

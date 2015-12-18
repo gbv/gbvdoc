@@ -1,6 +1,8 @@
 package App::GBVDoc;
 use v5.14;
 
+our $VERSION='0.3.1';
+
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 
 use Log::Contextual qw(:log);
@@ -54,8 +56,9 @@ sub core {
     my $uri = $env->{'rdflow.uri'};
 
     $env->{'tt.vars'} = { } unless $env->{'tt.vars'};
-    $env->{'tt.vars'}->{'uri'} = $uri;
-    $env->{'tt.vars'}->{'formats'} = [ @{$self->formats} ];
+    $env->{'tt.vars'}{'version'} = $VERSION;
+    $env->{'tt.vars'}{'uri'} = $uri;
+    $env->{'tt.vars'}{'formats'} = [ @{$self->formats} ];
 
     my $uri = $env->{'rdflow.uri'};
     my $rdf = $env->{'rdflow.data'};
@@ -73,7 +76,6 @@ sub core {
         }
     }
 
-    $env->{'tt.vars'}->{apptitle}  = 'Documents in libraries';
     $env->{'tt.vars'}->{error}     = $env->{'rdflow.error'};
     $env->{'tt.vars'}->{timestamp} = $env->{'rdflow.timestamp'};
     $env->{'tt.vars'}->{cached} = 1 if $env->{'rdflow.cached'};
