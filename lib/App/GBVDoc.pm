@@ -90,7 +90,7 @@ sub prepare_app {
     delete $NS->{uri};
     $self->base('http://uri.gbv.de/document/');
 
-    $self->formats([qw(ttl json rdfxml)])
+    $self->formats([qw(ttl json xml)])
         unless $self->formats;
 
     # init
