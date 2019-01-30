@@ -1,13 +1,14 @@
 package App::GBVDoc;
 use v5.14;
 
-our $VERSION='0.3.1';
+our $VERSION="0.3.2";
 
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 
 use Log::Contextual qw(:log);
 use RDF::Lazy qw(0.061);
 use Plack::Request;
+use Plack::Response;
 
 use RDF::Trine qw(iri);
 use RDF::Trine::Model;
@@ -35,50 +36,53 @@ use Try::Tiny;
 use CHI;
 
 our %FORMATS = (
-    nt   => 'ntriples', 
-    rdf  => 'rdfxml', 
+    nt   => 'ntriples',
+    rdf  => 'rdfxml',
     xml  => 'rdfxml',
     ttl  => 'turtle',
     json => 'rdfjson',
 );
 
 sub core {
-    my ($self, $app, $env) = @_;
+    my ( $self, $app, $env ) = @_;
 
-    if ( ($env->{'HTTP_X_FORWARDED_HOST'} || '') eq 'uri.gbv.de' ) {
+    if ( ( $env->{'HTTP_X_FORWARDED_HOST'} || '' ) eq 'uri.gbv.de' ) {
         my $base = $self->base;
         $base =~ s{^http://uri.gbv.de/|/$}{}g;
-        $env->{'SCRIPT_NAME'} = "/$base/" . ($env->{'SCRIPT_NAME'}|'');
-    #   $env->{'PATH_INFO'} = "/$base" . $env->{'PATH_INFO'};
+        $env->{'SCRIPT_NAME'} = "/$base/" . ( $env->{'SCRIPT_NAME'} | '' );
+
+        #   $env->{'PATH_INFO'} = "/$base" . $env->{'PATH_INFO'};
         $env->{'REQUEST_URI'} = "/$base" . $env->{'REQUEST_URI'};
     }
 
     my $uri = $env->{'rdflow.uri'};
 
-    $env->{'tt.vars'} = { } unless $env->{'tt.vars'};
+    $env->{'tt.vars'} = {} unless $env->{'tt.vars'};
     $env->{'tt.vars'}{'version'} = $VERSION;
-    $env->{'tt.vars'}{'uri'} = $uri;
-    $env->{'tt.vars'}{'formats'} = [ @{$self->formats} ];
+    $env->{'tt.vars'}{'uri'}     = $uri;
+    $env->{'tt.vars'}{'formats'} = [ @{ $self->formats } ];
 
     my $uri = $env->{'rdflow.uri'};
     my $rdf = $env->{'rdflow.data'};
     my $req = Plack::Request->new($env);
 
     if ( $rdf and $rdf->size ) {
-        delete $NS->{uri}; # TODO: Bug in RDF::Lazy
+        delete $NS->{uri};    # TODO: Bug in RDF::Lazy
         my $lazy = RDF::Lazy->new( $rdf, namespaces => $NS );
         $env->{'tt.vars'}->{uri} = $lazy->resource($uri);
 
         if ( $uri eq $self->base ) {
+
             # main page
-        } else {
+        }
+        else {
             $env->{'tt.path'} = '/document.html';
         }
     }
 
     $env->{'tt.vars'}->{error}     = $env->{'rdflow.error'};
     $env->{'tt.vars'}->{timestamp} = $env->{'rdflow.timestamp'};
-    $env->{'tt.vars'}->{cached} = 1 if $env->{'rdflow.cached'};
+    $env->{'tt.vars'}->{cached}    = 1 if $env->{'rdflow.cached'};
 
     $app->($env);
 }
@@ -90,64 +94,91 @@ sub prepare_app {
     delete $NS->{uri};
     $self->base('http://uri.gbv.de/document/');
 
-    $self->formats([qw(ttl json xml)])
-        unless $self->formats;
+    $self->formats( [qw(ttl json xml)] )
+      unless $self->formats;
 
     # init
     my $source = RDF::Flow::Cascade->new(
-            GBV::RDF::Source::Item->new,
-            GBV::RDF::Source::Document->new,
-            name => "item-or-document"
-        );
-    $source = RDF::Flow::Cached->new(
-        $source, 
-        CHI->new( driver => 'Memory', global => 1, expires_in => '1 hour' ),
+        GBV::RDF::Source::Item->new,
+        GBV::RDF::Source::Document->new,
+        name => "item-or-document"
     );
-    $self->source( $source );
+    $source =
+      RDF::Flow::Cached->new( $source,
+        CHI->new( driver => 'Memory', global => 1, expires_in => '1 hour' ),
+      );
+    $self->source($source);
 
     $self->{app} = builder {
-        enable 'Static', 
-            root => 'public',
-            path => qr{\.(css|png|gif|js|ico)$};
+        enable 'Static',
+          root => 'public',
+          path => qr{\.(css|png|gif|js|ico)$};
 
         # cache everything else for 10 seconds. TODO: set cache time
         enable 'Cached',
-                cache => CHI->new( 
-                    driver => 'Memory', global => 1, 
-                    expires_in => '10 seconds' 
-                );
+          cache => CHI->new(
+            driver     => 'Memory',
+            global     => 1,
+            expires_in => '10 seconds'
+          );
 
         enable 'JSONP';
+
+        enable sub {
+            my $app = shift;
+            sub {
+                my $env    = shift;
+                my $req    = Plack::Request->new($env);
+                my $format = $req->parameters->{format};
+                my $res    = $app->($env);
+                if ( $format eq 'redirect' ) {
+                    my $rdf = $env->{'rdflow.data'};
+                    my $uri = $env->{'rdflow.uri'};
+                    my $page =
+                      $rdf->get_statements( iri($uri),
+                        iri("http://xmlns.com/foaf/0.1/page"), undef )->next;
+                    if ($page) {
+                        $res = Plack::Response->new;
+                        $res->redirect( $page->object->uri_value );
+                        return $res->finalize;
+                    }
+                }
+                $res;
+              }
+        };
+
         enable 'RDF::Flow',
-            base         => $self->base,
-            empty_base   => 1,
-            source       => $self->source,
-            pass_through => 1,
-            formats      => \%FORMATS;
+          base         => $self->base,
+          empty_base   => 1,
+          source       => $self->source,
+          pass_through => 1,
+          formats      => \%FORMATS;
 
         # core driver
-        enable sub { 
+        enable sub {
             my $app = shift;
-            sub { 
+            sub {
                 my $env = shift;
-                $self->core($app, $env);
-            },
+                $self->core( $app, $env );
+            },;
         };
-    
-        Plack::Middleware::TemplateToolkit->new( 
+
+        Plack::Middleware::TemplateToolkit->new(
             INCLUDE_PATH => 'public',
-            RELATIVE => 1, # ??
-            INTERPOLATE => 1, 
+            RELATIVE     => 1,          # ??
+            INTERPOLATE  => 1,
             pass_through => 0,
-#            timer => $is_devel,
+
+            #            timer => $is_devel,
             request_vars => [qw(base)],
-            404 => '404.html', 500 => '500.html'
+            404          => '404.html',
+            500          => '500.html'
         );
     };
 }
 
 sub call {
-    my ($self, $env) = @_;
+    my ( $self, $env ) = @_;
     $self->{app}->($env);
 }
 
