@@ -3,7 +3,7 @@ use v5.14;
 
 #ABSTRACT: Edition or work from http://uri.gbv.de/document/
 
-use Log::Contextual qw(:log); #, -default_logger
+use Log::Contextual qw(:log);    #, -default_logger
 
 use RDF::NS::Trine;
 our $NS = RDF::NS::Trine->new('20111124');
@@ -31,38 +31,45 @@ our $b3kat = RDF::Flow::LinkedData->new(
 );
 
 sub retrieve_rdf {
-    my ($self, $env) = @_;
+    my ( $self, $env ) = @_;
 
     my $uri = $env->{'rdflow.uri'};
-    return unless $uri =~ qr{^http://uri\.gbv\.de/document/([a-z0-9:/-]+):ppn:([0-9X]+)$}i;
-    my ($dbkey, $ppn) = ($1, $2);
+    return
+      unless $uri =~
+      qr{^http://uri\.gbv\.de/document/([a-z0-9:/-]+):ppn:([0-9X]+)$}i;
+    my ( $dbkey, $ppn ) = ( $1, $2 );
 
     my $dburi = "http://uri.gbv.de/database/$dbkey";
-    my $db = $databases->retrieve( $dburi );
+    my $db    = $databases->retrieve($dburi);
     return if empty_rdf($db);
-    
+
     my $model = RDF::Trine::Model->new;
     my @triples;
 
     my $aref = {
-        _id => $uri, a => 'bibo:Document',
+        _id                   => $uri,
+        a                     => 'bibo:Document',
         foaf_isPrimaryTopicOf => { void_inDataset => $dburi },
     };
 
     my ($pica);
 
-    my $picabase =  $db->objects( iri($dburi), $NS->gbv('picabase') )->next;
+    my $picabase = $db->objects( iri($dburi), $NS->gbv('picabase') )->next;
+    my $homepage = $db->objects( iri($dburi), $NS->foaf('homepage') )->next;
+
     if ($picabase) {
         my $url = "http://unapi.gbv.de/?id=$dbkey:ppn:$ppn";
 
         # get pica record
-        $pica = eval { PICA::Record->new( get("$url&format=pp")) };
+        $pica = eval { PICA::Record->new( get("$url&format=pp") ) };
     }
 
     if ($pica) {
         my $org = $db->subjects( $NS->gbv_opac, iri($dburi) )->next;
-        push @triples, $self->pica_data( $uri, $pica, $picabase, $dbkey, $org );
-    } else {
+        push @triples,
+          $self->pica_data( $uri, $pica, $picabase, $dbkey, $org, $homepage );
+    }
+    else {
         log_warn { "No pica data: $dbkey:ppn:$ppn" };
         return $model;
     }
@@ -73,8 +80,8 @@ sub retrieve_rdf {
     decode_aref( $aref, callback => $model );
 
     #print STDERR "DONE\n";
-    $model->add_statement( statement( @$_ ) ) for @triples;
-    $model->add_iterator( $db->as_stream ); # just some parts
+    $model->add_statement( statement(@$_) ) for @triples;
+    $model->add_iterator( $db->as_stream );    # just some parts
 
     #print STDERR "DONE\n";
     #log_trace { "$url => $pica" };
@@ -83,44 +90,53 @@ sub retrieve_rdf {
 }
 
 sub pica_data {
-    my ($self, $uri, $pica, $picabase, $dbkey, $org) = @_;
+    my ( $self, $uri, $pica, $picabase, $dbkey, $org, $homepage ) = @_;
     my @triples;
 
     return unless $pica;
 
-    if ($picabase) {
-        my $url = $picabase->uri . "PPNSET?PPN=" . $pica->ppn;
+    if ( $picabase || $homepage ) {
+        my $url =
+            ( $homepage ? $homepage->uri : $picabase->uri )
+          . "PPNSET?PPN="
+          . $pica->ppn;
         push @triples, [ iri($uri), $NS->foaf_page, iri($url) ];
     }
     push @triples, [ iri($uri), $NS->daia_collectedBy, $org ] if $org;
 
     my @items;
-    if ($dbkey and $org) {
+    if ( $dbkey and $org ) {
         @items = $pica->items;
+
         # TODO: nur die mit passender ILN rausnehmen!
 
         my $itemsource = GBV::RDF::Source::Item->new;
 
         foreach my $item (@items) {
             my $data = { liburi => $org, picabase => $picabase };
-            my $itemuri = "http://uri.gbv.de/document/" . $dbkey . ':epn:' . $item->epn;
-            push @triples, $itemsource->picaitem_to_triples( $itemuri => $item, $data );
+            my $itemuri =
+              "http://uri.gbv.de/document/" . $dbkey . ':epn:' . $item->epn;
+            push @triples,
+              $itemsource->picaitem_to_triples(
+                $itemuri => $item,
+                $data
+              );
             push @triples, [ iri($uri), $NS->daia_exemplar, iri($itemuri) ];
         }
     }
 
-
     my $eki = $pica->field('007G');
-    $eki = join '', $eki->sf('c','0') if $eki;
-    if ($eki and $eki =~ /^BVB(BV\d+)$/) {
+    $eki = join '', $eki->sf( 'c', '0' ) if $eki;
+    if ( $eki and $eki =~ /^BVB(BV\d+)$/ ) {
         my $url = "http://lod.b3kat.de/title/$1";
-        my $b3 = $b3kat->retrieve($url);
-        if (!empty_rdf($b3)) {
-            if( $b3->isa('RDF::Trine::Iterator') ) {
+        my $b3  = $b3kat->retrieve($url);
+        if ( !empty_rdf($b3) ) {
+            if ( $b3->isa('RDF::Trine::Iterator') ) {
                 my $m = RDF::Trine::Model->new;
                 $m->add_iterator($b3);
                 $b3 = $m;
             }
+
             #my $btitle = $b3->objects( iri($url), $NS->dc_title )->next;
             #if ($btitle and $btitle->value eq $title) {
             #    push @triples, [ iri($uri), $NS->owl_sameAs, iri($url) ];

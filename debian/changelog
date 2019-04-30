@@ -2,6 +2,12 @@ gbvdoc (0.3.2) unstable; urgency=medium
 
   * Add parameter format=redirect
 
+ -- Jakob Voß <jakob.voss@gbv.de>  Mon, 30 Apr 2019 12:05:00 +0100
+
+gbvdoc (0.3.2) unstable; urgency=medium
+
+  * Add parameter format=redirect
+
  -- Jakob Voß <jakob.voss@gbv.de>  Wed, 30 Jan 2018 12:30:00 +0100
 
 gbvdoc (0.3.1) unstable; urgency=medium

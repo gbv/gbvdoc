@@ -50,8 +50,6 @@ sub core {
         my $base = $self->base;
         $base =~ s{^http://uri.gbv.de/|/$}{}g;
         $env->{'SCRIPT_NAME'} = "/$base/" . ( $env->{'SCRIPT_NAME'} | '' );
-
-        #   $env->{'PATH_INFO'} = "/$base" . $env->{'PATH_INFO'};
         $env->{'REQUEST_URI'} = "/$base" . $env->{'REQUEST_URI'};
     }
 
