@@ -58,7 +58,7 @@ sub retrieve_rdf {
     my $homepage = $db->objects( iri($dburi), $NS->foaf('homepage') )->next;
 
     if ($picabase) {
-        my $url = "http://unapi.gbv.de/?id=$dbkey:ppn:$ppn";
+        my $url = "http://unapi.k10plus.de/?id=$dbkey:ppn:$ppn";
 
         # get pica record
         $pica = eval { PICA::Record->new( get("$url&format=pp") ) };

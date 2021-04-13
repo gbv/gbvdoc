@@ -1,3 +1,9 @@
+gbvdoc (0.3.3) unstable; urgency=medium
+
+  * Change unapi server to unapi.k10plus.de
+
+ -- Jakob Voß <jakob.voss@gbv.de>  Tue, 13 Apr 2020 13:17:00 +0100
+
 gbvdoc (0.3.2) unstable; urgency=medium
 
   * Add parameter format=redirect
