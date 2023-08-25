@@ -1,12 +1,12 @@
 package App::GBVDoc;
 use v5.14;
 
-our $VERSION="0.3.3";
+our $VERSION = "0.3.3";
 
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 
 use Log::Contextual qw(:log);
-use RDF::Lazy qw(0.061);
+use RDF::Lazy       qw(0.061);
 use Plack::Request;
 use Plack::Response;
 
@@ -55,7 +55,7 @@ sub core {
 
     my $uri = $env->{'rdflow.uri'};
 
-    $env->{'tt.vars'} = {} unless $env->{'tt.vars'};
+    $env->{'tt.vars'}            = {} unless $env->{'tt.vars'};
     $env->{'tt.vars'}{'version'} = $VERSION;
     $env->{'tt.vars'}{'uri'}     = $uri;
     $env->{'tt.vars'}{'formats'} = [ @{ $self->formats } ];
@@ -63,6 +63,11 @@ sub core {
     my $uri = $env->{'rdflow.uri'};
     my $rdf = $env->{'rdflow.data'};
     my $req = Plack::Request->new($env);
+
+    say $env->{'REQUEST_URI'};
+    say $env->{'PATH_INFO'};
+    $env->{'tt.vars'}{base} =
+      '.' . "/.." x ( scalar( split '/', $env->{'PATH_INFO'} ) - 2 );
 
     if ( $rdf and $rdf->size ) {
         delete $NS->{uri};    # TODO: Bug in RDF::Lazy
@@ -142,7 +147,7 @@ sub prepare_app {
                     }
                 }
                 $res;
-              }
+            }
         };
 
         enable 'RDF::Flow',
@@ -163,12 +168,9 @@ sub prepare_app {
 
         Plack::Middleware::TemplateToolkit->new(
             INCLUDE_PATH => 'public',
-            RELATIVE     => 1,          # ??
+            RELATIVE     => 1,            # ??
             INTERPOLATE  => 1,
             pass_through => 0,
-
-            #            timer => $is_devel,
-            request_vars => [qw(base)],
             404          => '404.html',
             500          => '500.html'
         );
