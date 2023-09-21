@@ -1,7 +1,7 @@
 package App::GBVDoc;
 use v5.14;
 
-our $VERSION = "0.3.3";
+our $VERSION="0.3.4";
 
 #ABSTRACT: GBV Linked Data Server http://uri.gbv.de/document/
 

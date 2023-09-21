@@ -22,7 +22,7 @@ version:
 	@perl -p -i -e 's/^our\s+\$$NAME\s*=.*/our \$$NAME="$(PACKAGE)";/' $(MAINSRC)
 
 # build Debian package
-package: manpage version tests
+package: version tests
 	dpkg-buildpackage -b -us -uc -rfakeroot
 	mv ../$(PACKAGE)_$(VERSION)_*.deb .
 
