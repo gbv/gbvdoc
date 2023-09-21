@@ -10,7 +10,7 @@ our $NS = RDF::NS::Trine->new('20111102');
 
 use RDF::Trine qw(statement iri literal blank);
 use RDF::Trine::Model;
-use RDF::Flow qw(0.173);
+use RDF::Flow         qw(0.173);
 use RDF::Flow::Source qw(empty_rdf);
 
 use parent 'RDF::Flow::Source';
@@ -49,7 +49,7 @@ sub retrieve_rdf {
         push @triples, [ iri($uri), $NS->daia_heldBy, $liburi ];
 
         my $library = RDF::Flow::LinkedData->new()->retrieve( $liburi->uri );
-        my $iter = $library->get_statements( undef, $NS->foaf_name, undef );
+        my $iter    = $library->get_statements( undef, $NS->foaf_name, undef );
         while ( my $st = $iter->next ) { $rdf->add_statement($st) }
         $iter = $library->get_statements( undef, $NS->owl_sameAs, undef );
         while ( my $st = $iter->next ) { $rdf->add_statement($st) }
@@ -70,7 +70,7 @@ sub retrieve_rdf {
         my $xml = get($url);
         if ( $xml =~ /PPN="([0-9x]+)"/mi ) {
             my $ppn = $1;
-            $url = "http://unapi.k10plus.de/?id=$dbkey:ppn:$ppn&format=pp";
+            $url  = "http://unapi.k10plus.de/?id=$dbkey:ppn:$ppn&format=pp";
             $pica = eval { PICA::Record->new( get($url) ) };
         }
     }
@@ -118,7 +118,7 @@ sub picaitem_to_triples {
     # Standort
     if ( my $sst = $f209A->sf('f') ) {
         $sst = lc($sst);
-        $sst =~ s/\s+/_/;
+        $sst =~ s/\s+/_/g;
         my $ssturi;
         if ( $data->{liburi} ) {
             $ssturi = $data->{liburi}->uri . '@' . $sst;
