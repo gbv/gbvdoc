@@ -21,25 +21,6 @@ version:
 	@perl -p -i -e 's/^our\s+\$$VERSION\s*=.*/our \$$VERSION="$(VERSION)";/' $(MAINSRC)
 	@perl -p -i -e 's/^our\s+\$$NAME\s*=.*/our \$$NAME="$(PACKAGE)";/' $(MAINSRC)
 
-# build documentation
-PANDOC = $(shell which pandoc)
-ifeq ($(PANDOC),)
-  PANDOC = $(error pandoc is required but not installed)
-endif
-
-docs: README.md manpage
-	cd doc; make $(PACKAGE).pdf
-
-manpage: debian/$(PACKAGE).1
-debian/$(PACKAGE).1: README.md $(CONTROL)
-	@echo "%$(PACKAGE)(1)" Manual | tr a-z A-Z > tmp.md
-	@echo "# NAME" >> tmp.md
-	@echo "$(PACKAGE) - GBV Documents" >> tmp.md
-	@echo >> tmp.md
-	@grep -v '^\[!' $< >> tmp.md
-	@cat tmp.md | $(PANDOC) -s -t man -o $@
-	@rm tmp.md
-
 # build Debian package
 package: manpage version tests
 	dpkg-buildpackage -b -us -uc -rfakeroot
@@ -48,7 +29,6 @@ package: manpage version tests
 # install required toolchain and Debian packages
 dependencies:
 	apt-get -y install fakeroot dpkg-dev debhelper
-	apt-get -y install pandoc libghc-citeproc-hs-data 
 	apt-get -y install $(DEPENDS)
 
 # install required Perl packages
