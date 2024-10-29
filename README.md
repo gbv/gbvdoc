@@ -47,6 +47,21 @@ Log files are located at `/var/log/gbvdoc/`:
 
 See `debian/changelog`.
 
+# DEVELOPMENT
+
+Install dependencies:
+
+    sudo make dependencies
+    make local
+
+Run local instance:
+
+    make run
+
+Run unit tests:
+
+    make tests
+
 # SEE ALSO
 
 The source code of gbvdoc is managed in a public git repository at
@@ -54,5 +69,3 @@ The source code of gbvdoc is managed in a public git repository at
 <https://github.com/gbv/gbvdoc/issues>!
 
 The Changelog is located in file `debian/changelog`.
-
-Development guidelines are given in file `CONTRIBUTING.md`.
